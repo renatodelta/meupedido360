@@ -1,12 +1,18 @@
 import React from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { notFound } from 'next/navigation';
+import { unstable_noStore as noStore } from 'next/cache';
 import '../../globals.css';
 
 // Configure Supabase client for Server Component
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: { persistSession: false },
+  global: {
+    fetch: (url, options = {}) => fetch(url, { ...options, cache: 'no-store' }),
+  },
+});
 
 interface TenantLayoutProps {
   children: React.ReactNode;
@@ -17,6 +23,7 @@ interface TenantLayoutProps {
 
 // Force dynamic page generation to ensure fresh DB records (prevents stale color theme caches)
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 /**
  * app/(store)/[subdomain]/layout.tsx
@@ -27,6 +34,7 @@ export const dynamic = 'force-dynamic';
  * 3. Injects custom brand colors as CSS Custom Properties for Tailwind CSS.
  */
 export default async function TenantLayout({ children, params }: TenantLayoutProps) {
+  noStore();
   const { subdomain } = params;
 
   // Fetch tenant info from Supabase database
@@ -125,13 +133,13 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
           </div>
           <div className="flex items-center gap-2.5">
             <a 
-              href={`http://${subdomain}.localhost:3000/admin/produtos`}
+              href="/admin/produtos"
               className="px-3 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30 font-bold transition flex items-center gap-1.5 shadow-sm"
             >
               🍽️ Gerenciar Cardápio
             </a>
             <a 
-              href={`http://${subdomain}.localhost:3000/admin/onboarding`}
+              href="/admin/onboarding"
               className="px-3 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-750 font-semibold transition flex items-center gap-1.5"
             >
               🎨 Personalizar Visual
@@ -166,7 +174,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
             {/* Realtime Open/Closed indicator & Quick Action */}
             <div className="flex items-center gap-3">
               <a
-                href={`http://${subdomain}.localhost:3000/admin/produtos`}
+                href="/admin/produtos"
                 className="hidden md:inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition"
               >
                 <span>Editar Itens</span>

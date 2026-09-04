@@ -31,7 +31,8 @@ export function middleware(request: NextRequest) {
   const isRootDomain = 
     host === 'meupedido360.com' || 
     host === 'www.meupedido360.com' || 
-    host === 'localhost';
+    host === 'localhost' ||
+    host === '127.0.0.1';
 
   if (isRootDomain) {
     // Let Next.js naturally resolve /(public) group

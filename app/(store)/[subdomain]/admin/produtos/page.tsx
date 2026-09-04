@@ -313,14 +313,14 @@ export default function AdminProductsPage() {
 
           <div className="flex items-center gap-3">
             <a
-              href={`http://${subdomain}.localhost:3000/admin/onboarding`}
+              href="/admin/onboarding"
               className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-2 transition"
             >
               <Paintbrush className="w-3.5 h-3.5 text-rose-400" />
               <span>Visual da Loja</span>
             </a>
             <a
-              href={`http://${subdomain}.localhost:3000/`}
+              href="/"
               target="_blank"
               rel="noreferrer"
               className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white text-xs font-semibold flex items-center gap-2 transition shadow-lg shadow-rose-500/20"
