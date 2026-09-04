@@ -4,9 +4,9 @@ import type { NextRequest } from 'next/server';
 /**
  * Next.js App Router Middleware for Dynamic Subdomains
  * 
- * - Root Domain (partiu360.com, www.partiu360.com, localhost) 
+ * - Root Domain (meupedido360.com, www.meupedido360.com, localhost) 
  *   => Rewritten internally to `app/(public)/*`
- * - Tenant Subdomains (*.partiu360.com, *.localhost) 
+ * - Tenant Subdomains (*.meupedido360.com, *.localhost) 
  *   => Rewritten internally to `app/(store)/[subdomain]/*`
  */
 export function middleware(request: NextRequest) {
@@ -29,8 +29,8 @@ export function middleware(request: NextRequest) {
 
   // 3. Determine if request is hitting the main root domain
   const isRootDomain = 
-    host === 'partiu360.com' || 
-    host === 'www.partiu360.com' || 
+    host === 'meupedido360.com' || 
+    host === 'www.meupedido360.com' || 
     host === 'localhost';
 
   if (isRootDomain) {
@@ -41,8 +41,8 @@ export function middleware(request: NextRequest) {
   // 4. Extract subdomain slug
   let subdomain = '';
 
-  if (host.endsWith('.partiu360.com')) {
-    subdomain = host.replace('.partiu360.com', '');
+  if (host.endsWith('.meupedido360.com')) {
+    subdomain = host.replace('.meupedido360.com', '');
   } else if (host.endsWith('.localhost')) {
     subdomain = host.replace('.localhost', '');
   } else {
@@ -64,7 +64,7 @@ export function middleware(request: NextRequest) {
   }
 
   // 6. Rewrite path to the tenant dynamic directory (store) omitting route group
-  // E.g. padaria.partiu360.com/admin => app/(store)/[subdomain]/admin
+  // E.g. padaria.meupedido360.com/admin => app/(store)/[subdomain]/admin
   url.pathname = `/${subdomain}${pathname}`;
   return NextResponse.rewrite(url);
 }

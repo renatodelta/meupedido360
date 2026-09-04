@@ -2,7 +2,7 @@ import React from 'react';
 import '../globals.css';
 
 export const metadata = {
-  title: 'Partiu360 - Plataforma SaaS de Cardápio Digital & Delivery',
+  title: 'MeuPedido360 - Plataforma SaaS de Cardápio Digital & Delivery',
   description: 'Crie seu cardápio digital em segundos com subdomínio próprio e integração com Mercado Pago.',
 };
 

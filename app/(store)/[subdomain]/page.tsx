@@ -43,7 +43,7 @@ const MOCKUP_PRODUCTS = [
   {
     id: 'prod-1',
     category_id: 'cat-burgers',
-    name: 'Partiu Smash Bacon',
+    name: 'MeuPedido Smash Bacon',
     description: 'Dois smash burgers de 80g, muito queijo cheddar derretido, fatias de bacon crocante e maionese artesanal da casa no pão brioche selado na manteiga.',
     price: 32.90,
     image_url: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&auto=format&fit=crop&q=80',

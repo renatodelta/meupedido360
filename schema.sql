@@ -1,5 +1,5 @@
 -- ============================================================================
--- PARTIU360 - BANCO DE DADOS SaaS MULTI-TENANT
+-- MEUPEDIDO360 - BANCO DE DADOS SaaS MULTI-TENANT
 -- SCRIPT DE INICIALIZAÇÃO E SEGURANÇA (SUPABASE / POSTGRESQL)
 -- ============================================================================
 

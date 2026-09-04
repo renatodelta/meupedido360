@@ -15,7 +15,7 @@ export default function LandingPage() {
             <Zap className="w-6 h-6 text-white fill-white/10" />
           </div>
           <span className="text-2xl font-black tracking-tight text-white">
-            Partiu<span className="bg-gradient-to-r from-rose-400 to-pink-500 bg-clip-text text-transparent">360</span>
+            MeuPedido<span className="bg-gradient-to-r from-rose-400 to-pink-500 bg-clip-text text-transparent">360</span>
           </span>
         </div>
         
@@ -53,7 +53,7 @@ export default function LandingPage() {
         </h1>
 
         <p className="text-slate-400 text-lg sm:text-xl max-w-3xl mx-auto font-light leading-relaxed">
-          Crie uma plataforma de delivery automatizada. Tenha o domínio da sua marca (ex: <code className="text-rose-400 font-mono">sualoja.partiu360.com</code>), 
+          Crie uma plataforma de delivery automatizada. Tenha o domínio da sua marca (ex: <code className="text-rose-400 font-mono">sualoja.meupedido360.com</code>), 
           gerenciamento em tempo real de pedidos e pagamentos recorrentes integrados via Mercado Pago.
         </p>
 
@@ -90,7 +90,7 @@ export default function LandingPage() {
             </div>
             <h3 className="text-xl font-semibold text-white">Subdomínios Dinâmicos</h3>
             <p className="text-slate-400 text-sm leading-relaxed">
-              Cada lojista recebe um endereço único na web instantaneamente (ex: <code className="text-rose-400 font-mono text-xs">padaria.partiu360.com</code>). 
+              Cada lojista recebe um endereço único na web instantaneamente (ex: <code className="text-rose-400 font-mono text-xs">padaria.meupedido360.com</code>). 
               Totalmente configurado no edge da Vercel.
             </p>
           </div>
@@ -221,7 +221,7 @@ export default function LandingPage() {
       {/* FOOTER */}
       <footer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-slate-900 text-center space-y-4 text-sm text-slate-500">
         <div>
-          &copy; {new Date().getFullYear()} Partiu360. Todos os direitos reservados.
+          &copy; {new Date().getFullYear()} MeuPedido360. Todos os direitos reservados.
         </div>
         <div className="flex justify-center gap-6 text-slate-400">
           <a href="/terms" className="hover:text-white transition">Termos de Serviço</a>

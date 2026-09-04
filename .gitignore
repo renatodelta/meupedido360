@@ -6,6 +6,7 @@
 # Next.js build and cache output
 /.next/
 /out/
+*.tsbuildinfo
 
 # Local environment files (contains secret API keys)
 .env*.local

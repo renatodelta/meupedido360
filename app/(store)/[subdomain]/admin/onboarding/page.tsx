@@ -276,7 +276,7 @@ export default function OnboardingPage() {
           </div>
           <h1 className="text-3xl font-black tracking-tight text-white">Setup Visual do Lojista</h1>
           <p className="text-slate-400 text-sm">
-            Configure a marca do restaurante **{tenant.name}** (<code className="text-rose-400 font-mono text-xs">{subdomain}.partiu360.com</code>).
+            Configure a marca do restaurante **{tenant.name}** (<code className="text-rose-400 font-mono text-xs">{subdomain}.meupedido360.com</code>).
           </p>
         </div>
 

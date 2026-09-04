@@ -77,7 +77,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
 
             <div className="pt-4 border-t border-slate-800">
               <a
-                href="https://partiu360.com/login"
+                href="https://meupedido360.com/login"
                 className="inline-flex items-center justify-center w-full px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 rounded-xl transition duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-rose-500/20"
               >
                 Acessar Área do Lojista
