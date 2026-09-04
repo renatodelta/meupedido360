@@ -115,6 +115,30 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
         }}
         className="min-h-screen font-sans antialiased text-slate-800 transition-colors duration-300 pb-12"
       >
+        {/* MERCHANT ADMIN TOP BAR */}
+        <div className="bg-slate-950 text-slate-300 text-xs px-4 sm:px-8 py-2 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span className="font-semibold text-white">Painel do Restaurante</span>
+            <span className="text-slate-500 hidden sm:inline">•</span>
+            <span className="text-slate-400 hidden sm:inline">{subdomain}.meupedido360.com</span>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <a 
+              href={`http://${subdomain}.localhost:3000/admin/produtos`}
+              className="px-3 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30 font-bold transition flex items-center gap-1.5 shadow-sm"
+            >
+              🍽️ Gerenciar Cardápio
+            </a>
+            <a 
+              href={`http://${subdomain}.localhost:3000/admin/onboarding`}
+              className="px-3 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-750 font-semibold transition flex items-center gap-1.5"
+            >
+              🎨 Personalizar Visual
+            </a>
+          </div>
+        </div>
+
         {/* PREMIUM NAVIGATION HEADER */}
         <header className="sticky top-0 z-50 backdrop-blur-md bg-white/70 dark:bg-slate-900/70 border-b border-slate-200/50 dark:border-slate-800/50 transition-all duration-300">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -139,28 +163,37 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
               </span>
             </div>
             
-            {/* Realtime Open/Closed indicator */}
-            <div className="flex items-center gap-2">
-              <span className="relative flex h-2 w-2">
-                <span 
-                  className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
-                  style={{ backgroundColor: 'var(--primary-color)' }}
-                ></span>
-                <span 
-                  className="relative inline-flex rounded-full h-2 w-2"
-                  style={{ backgroundColor: 'var(--primary-color)' }}
-                ></span>
-              </span>
-              <span 
-                className="text-xs font-semibold px-2.5 py-0.5 rounded-full border transition-all duration-300"
-                style={{ 
-                  color: 'var(--primary-color)', 
-                  borderColor: 'var(--primary-color)',
-                  backgroundColor: `${primaryColor}10` // Dynamic opacity syntax (10% hex equivalent)
-                }}
+            {/* Realtime Open/Closed indicator & Quick Action */}
+            <div className="flex items-center gap-3">
+              <a
+                href={`http://${subdomain}.localhost:3000/admin/produtos`}
+                className="hidden md:inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition"
               >
-                Aberto
-              </span>
+                <span>Editar Itens</span>
+              </a>
+
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span 
+                    className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                    style={{ backgroundColor: 'var(--primary-color)' }}
+                  ></span>
+                  <span 
+                    className="relative inline-flex rounded-full h-2 w-2"
+                    style={{ backgroundColor: 'var(--primary-color)' }}
+                  ></span>
+                </span>
+                <span 
+                  className="text-xs font-semibold px-2.5 py-0.5 rounded-full border transition-all duration-300"
+                  style={{ 
+                    color: 'var(--primary-color)', 
+                    borderColor: 'var(--primary-color)',
+                    backgroundColor: `${primaryColor}10` // Dynamic opacity syntax (10% hex equivalent)
+                  }}
+                >
+                  Aberto
+                </span>
+              </div>
             </div>
           </div>
         </header>

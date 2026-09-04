@@ -123,13 +123,32 @@ export default async function StorePage({ params }: StorePageProps) {
     }
   }
 
-  // 3. Fallback to rich mockup data if DB has no records (for instant presentation)
+  // 3. Determine if using real DB records or mockup demonstration
+  const hasDbContent = categories.length > 0 && products.length > 0;
   const displayCategories = categories.length > 0 ? categories : MOCKUP_CATEGORIES;
   const displayProducts = products.length > 0 ? products : MOCKUP_PRODUCTS;
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       
+      {/* DEMO NOTICE BANNER (shown only when viewing default mockup items) */}
+      {!hasDbContent && (
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-300 shadow-xl">
+          <div className="flex items-center gap-2.5">
+            <span className="p-1.5 rounded-lg bg-rose-500/10 text-rose-400">💡</span>
+            <span>
+              <strong>Modo de Demonstração:</strong> Estes itens são modelos de exemplo. Cadastre seus próprios lanches, bebidas e preços reais.
+            </span>
+          </div>
+          <a
+            href={`http://${subdomain}.localhost:3000/admin/produtos`}
+            className="whitespace-nowrap px-4 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 text-white font-bold hover:scale-105 transition duration-200 shadow-md shadow-rose-500/20"
+          >
+            🍽️ Cadastrar Meus Produtos
+          </a>
+        </div>
+      )}
+
       {/* WELCOME BANNER & CATEGORY SLIDER */}
       <div className="relative rounded-3xl overflow-hidden bg-slate-900 text-white p-8 sm:p-12 shadow-2xl flex flex-col justify-end min-h-[220px]">
         {/* Soft layout background overlay */}
@@ -166,80 +185,98 @@ export default async function StorePage({ params }: StorePageProps) {
       </div>
 
       {/* CATALOG GRID */}
-      <div className="space-y-12">
-        {displayCategories.map((category) => {
-          const categoryProducts = displayProducts.filter((p) => p.category_id === category.id);
-          
-          if (categoryProducts.length === 0) return null;
+      {displayProducts.length === 0 ? (
+        <div className="text-center py-16 px-6 bg-slate-900/40 border border-slate-800 rounded-3xl space-y-4 max-w-lg mx-auto">
+          <div className="w-14 h-14 rounded-2xl bg-rose-500/10 text-rose-400 flex items-center justify-center mx-auto text-2xl font-bold">
+            🍽️
+          </div>
+          <h3 className="text-xl font-bold text-white">Nenhum produto cadastrado ainda</h3>
+          <p className="text-slate-400 text-sm">
+            Este restaurante ainda não adicionou itens ao cardápio. Acesse o painel de produtos para começar a cadastrar.
+          </p>
+          <a
+            href={`http://${subdomain}.localhost:3000/admin/produtos`}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 text-white font-bold text-sm shadow-lg shadow-rose-500/25"
+          >
+            Cadastrar Meus Produtos Agora
+          </a>
+        </div>
+      ) : (
+        <div className="space-y-12">
+          {displayCategories.map((category) => {
+            const categoryProducts = displayProducts.filter((p) => p.category_id === category.id);
+            
+            if (categoryProducts.length === 0) return null;
 
-          return (
-            <section key={category.id} id={category.id} className="scroll-mt-36 space-y-6">
-              <div className="flex items-center gap-3">
-                <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                  {category.name}
-                </h2>
-                <div className="h-0.5 flex-1 bg-slate-100 dark:bg-slate-800" />
-              </div>
+            return (
+              <section key={category.id} id={category.id} className="scroll-mt-36 space-y-6">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                    {category.name}
+                  </h2>
+                  <div className="h-0.5 flex-1 bg-slate-100 dark:bg-slate-800" />
+                </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-                {categoryProducts.map((product) => (
-                  <div
-                    key={product.id}
-                    className="group rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 overflow-hidden flex flex-col sm:flex-row hover:shadow-lg transition-all duration-300 hover:border-slate-300 dark:hover:border-slate-700"
-                  >
-                    {/* Product Image */}
-                    {product.image_url && (
-                      <div className="w-full sm:w-44 h-44 sm:h-auto relative overflow-hidden bg-slate-100 flex-shrink-0">
-                        <img
-                          src={product.image_url}
-                          alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                      </div>
-                    )}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+                  {categoryProducts.map((product) => (
+                    <div
+                      key={product.id}
+                      className="group rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 overflow-hidden flex flex-col sm:flex-row hover:shadow-lg transition-all duration-300 hover:border-slate-300 dark:hover:border-slate-700"
+                    >
+                      {/* Product Image */}
+                      {product.image_url && (
+                        <div className="w-full sm:w-44 h-44 sm:h-auto relative overflow-hidden bg-slate-100 flex-shrink-0">
+                          <img
+                            src={product.image_url}
+                            alt={product.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        </div>
+                      )}
 
-                    {/* Product Details */}
-                    <div className="p-5 flex flex-col justify-between flex-grow space-y-4">
-                      <div className="space-y-2">
-                        <div className="flex items-start justify-between gap-2">
-                          <h3 className="font-bold text-lg text-slate-900 dark:text-white group-hover:text-primary transition-colors duration-200">
-                            {product.name}
-                          </h3>
-                          <button className="text-slate-400 hover:text-rose-500 transition duration-150 flex-shrink-0">
-                            <Heart className="w-5 h-5" />
+                      {/* Product Details */}
+                      <div className="p-5 flex flex-col justify-between flex-grow space-y-4">
+                        <div className="space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <h3 className="font-bold text-lg text-slate-900 dark:text-white group-hover:text-primary transition-colors duration-200">
+                              {product.name}
+                            </h3>
+                            <button className="text-slate-400 hover:text-rose-500 transition duration-150 flex-shrink-0">
+                              <Heart className="w-5 h-5" />
+                            </button>
+                          </div>
+                          {product.description && (
+                            <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                              {product.description}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="flex items-center justify-between pt-2">
+                          <span 
+                            className="font-extrabold text-xl"
+                            style={{ color: 'var(--primary-color)' }}
+                          >
+                            {product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                          </span>
+
+                          <button 
+                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white shadow-md hover:scale-105 active:scale-95 transition duration-200"
+                            style={{ backgroundColor: 'var(--primary-color)' }}
+                          >
+                            Adicionar
+                            <ShoppingBag className="w-3.5 h-3.5" />
                           </button>
                         </div>
-                        {product.description && (
-                          <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
-                            {product.description}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="flex items-center justify-between pt-2">
-                        <span 
-                          className="text-lg font-black"
-                          style={{ color: 'var(--primary-color)' }}
-                        >
-                          {product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                        </span>
-                        
-                        <button
-                          className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white rounded-xl shadow-md transition duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
-                          style={{ backgroundColor: 'var(--primary-color)' }}
-                        >
-                          Adicionar
-                          <ShoppingBag className="w-3.5 h-3.5" />
-                        </button>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          );
-        })}
-      </div>
+                  ))}
+                </div>
+              </section>
+            );
+          })}
+        </div>
+      )}
 
       {/* FLOATING CART BAR PREVIEW */}
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-lg z-50">
