@@ -30,7 +30,7 @@ export default function LandingPage() {
             Entrar
           </a>
           <a 
-            href="#pricing" 
+            href="/signup?plan=trial" 
             className="text-sm font-semibold bg-white text-slate-950 px-5 py-2.5 rounded-xl hover:bg-slate-200 transition shadow-lg shadow-white/5"
           >
             Começar Grátis
@@ -59,7 +59,7 @@ export default function LandingPage() {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
           <a 
-            href="#pricing"
+            href="/signup?plan=trial"
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold text-white bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 rounded-xl transition duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-rose-500/20"
           >
             Criar meu Cardápio
