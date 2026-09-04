@@ -70,6 +70,8 @@ export default function AdminProductsPage() {
   const [togglingProductId, setTogglingProductId] = useState<string | null>(null);
   const [feedbackMsg, setFeedbackMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  const [tenantId, setTenantId] = useState<string | null>(null);
+
   // 1. Initial Load: Fetch Tenant, Categories and Products
   useEffect(() => {
     async function loadData() {
@@ -84,18 +86,18 @@ export default function AdminProductsPage() {
         const catData = await catRes.json();
         const prodData = await prodRes.json();
 
+        if (catData.tenant_id) setTenantId(catData.tenant_id);
         if (catData.categories) setCategories(catData.categories);
         if (prodData.products) setProducts(prodData.products);
 
-        // Fetch tenant details for name
-        const tenantRes = await fetch(`/api/tenant/categories?slug=${encodeURIComponent(subdomain)}`);
-        // We can set default selected category
+        // Set default selected category for the product form
         if (catData.categories && catData.categories.length > 0) {
           setProductForm(prev => ({ ...prev, category_id: catData.categories[0].id }));
         }
 
-      } catch (err) {
+      } catch (err: any) {
         console.error('Erro ao carregar cardápio:', err);
+        showFeedback('error', 'Falha ao carregar itens do cardápio.');
       } finally {
         setLoading(false);
       }
@@ -155,7 +157,8 @@ export default function AdminProductsPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             id: editingProduct.id,
-            tenant_id: categories[0]?.id ? undefined : undefined,
+            tenant_id: tenantId,
+            slug: subdomain,
             name: productForm.name,
             category_id: productForm.category_id,
             description: productForm.description,
@@ -165,9 +168,12 @@ export default function AdminProductsPage() {
           }),
         });
         const data = await res.json();
-        if (data.product) {
+        if (res.ok && data.product) {
           setProducts(prev => prev.map(p => p.id === data.product.id ? data.product : p));
           showFeedback('success', 'Produto atualizado com sucesso!');
+          setIsProductModalOpen(false);
+        } else {
+          showFeedback('error', data.error || 'Erro ao atualizar produto.');
         }
       } else {
         // Create Product
@@ -175,6 +181,8 @@ export default function AdminProductsPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            tenant_id: tenantId,
+            slug: subdomain,
             category_id: productForm.category_id,
             name: productForm.name,
             description: productForm.description,
@@ -184,14 +192,16 @@ export default function AdminProductsPage() {
           }),
         });
         const data = await res.json();
-        if (data.product) {
+        if (res.ok && data.product) {
           setProducts(prev => [data.product, ...prev]);
           showFeedback('success', 'Produto adicionado com sucesso!');
+          setIsProductModalOpen(false);
+        } else {
+          showFeedback('error', data.error || 'Erro ao adicionar produto.');
         }
       }
-      setIsProductModalOpen(false);
-    } catch (err) {
-      showFeedback('error', 'Erro ao salvar produto.');
+    } catch (err: any) {
+      showFeedback('error', err.message || 'Erro ao salvar produto.');
     } finally {
       setIsSubmitting(false);
     }
@@ -207,6 +217,8 @@ export default function AdminProductsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: product.id,
+          tenant_id: tenantId,
+          slug: subdomain,
           is_available: newStatus,
         }),
       });
@@ -249,19 +261,22 @@ export default function AdminProductsPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          tenant_id: tenantId,
           slug: subdomain,
           name: newCategoryName.trim(),
         }),
       });
       const data = await res.json();
-      if (data.category) {
+      if (res.ok && data.category) {
         setCategories(prev => [...prev, data.category]);
         showFeedback('success', `Seção "${data.category.name}" criada com sucesso!`);
         setNewCategoryName('');
         setIsCategoryModalOpen(false);
+      } else {
+        showFeedback('error', data.error || 'Erro ao criar seção.');
       }
-    } catch (err) {
-      showFeedback('error', 'Erro ao criar seção.');
+    } catch (err: any) {
+      showFeedback('error', err.message || 'Erro ao criar seção.');
     } finally {
       setIsSubmitting(false);
     }

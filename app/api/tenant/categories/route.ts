@@ -6,6 +6,17 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+async function resolveTenantId(tenant_id?: string | null, slug?: string | null): Promise<string | null> {
+  if (tenant_id) return tenant_id;
+  if (!slug) return null;
+  const { data: tenant } = await supabase
+    .from('tenants')
+    .select('id')
+    .eq('slug', slug)
+    .maybeSingle();
+  return tenant?.id || null;
+}
+
 /**
  * GET /api/tenant/categories?tenant_id=... or ?slug=...
  * Lists all categories for a given tenant.
@@ -13,22 +24,13 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const tenantId = searchParams.get('tenant_id');
-    const slug = searchParams.get('slug');
+    const tenantIdParam = searchParams.get('tenant_id');
+    const slugParam = searchParams.get('slug');
 
-    let targetTenantId = tenantId;
-
-    if (!targetTenantId && slug) {
-      const { data: tenant } = await supabase
-        .from('tenants')
-        .select('id')
-        .eq('slug', slug)
-        .single();
-      targetTenantId = tenant?.id;
-    }
+    const targetTenantId = await resolveTenantId(tenantIdParam, slugParam);
 
     if (!targetTenantId) {
-      return NextResponse.json({ error: 'tenant_id ou slug é obrigatório' }, { status: 400 });
+      return NextResponse.json({ error: 'Restaurante não encontrado. Verifique o tenant_id ou subdomínio.' }, { status: 400 });
     }
 
     const { data: categories, error } = await supabase
@@ -42,7 +44,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ categories: categories || [] });
+    return NextResponse.json({ 
+      tenant_id: targetTenantId,
+      categories: categories || [] 
+    });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Erro interno' }, { status: 500 });
   }
@@ -55,17 +60,25 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { tenant_id, name, order_index = 0 } = body;
+    const { tenant_id, slug, name, order_index = 0 } = body;
 
-    if (!tenant_id || !name?.trim()) {
-      return NextResponse.json({ error: 'tenant_id e nome da categoria são obrigatórios' }, { status: 400 });
+    const targetTenantId = await resolveTenantId(tenant_id, slug);
+
+    if (!targetTenantId) {
+      return NextResponse.json({ error: 'Restaurante não encontrado.' }, { status: 400 });
     }
+
+    if (!name || !name.trim()) {
+      return NextResponse.json({ error: 'O nome da seção é obrigatório.' }, { status: 400 });
+    }
+
+    const categoryName = name.trim();
 
     const { data, error } = await supabase
       .from('categories')
       .insert({
-        tenant_id,
-        name: name.trim(),
+        tenant_id: targetTenantId,
+        name: categoryName,
         order_index,
         is_active: true,
       })
@@ -73,12 +86,14 @@ export async function POST(request: Request) {
       .single();
 
     if (error) {
+      console.error('[Categories POST] Supabase insert error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, category: data });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Erro interno' }, { status: 500 });
+    console.error('[Categories POST] Exception:', err);
+    return NextResponse.json({ error: err.message || 'Erro interno ao salvar seção.' }, { status: 500 });
   }
 }
 
@@ -89,24 +104,29 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const { id, tenant_id, name, order_index, is_active } = body;
+    const { id, tenant_id, slug, name, order_index, is_active } = body;
 
-    if (!id || !tenant_id) {
-      return NextResponse.json({ error: 'id e tenant_id são obrigatórios' }, { status: 400 });
+    if (!id) {
+      return NextResponse.json({ error: 'id da categoria é obrigatório' }, { status: 400 });
     }
+
+    const targetTenantId = await resolveTenantId(tenant_id, slug);
 
     const updatePayload: any = {};
     if (name !== undefined) updatePayload.name = name.trim();
     if (order_index !== undefined) updatePayload.order_index = order_index;
     if (is_active !== undefined) updatePayload.is_active = is_active;
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('categories')
       .update(updatePayload)
-      .eq('id', id)
-      .eq('tenant_id', tenant_id)
-      .select()
-      .single();
+      .eq('id', id);
+
+    if (targetTenantId) {
+      query = query.eq('tenant_id', targetTenantId);
+    }
+
+    const { data, error } = await query.select().single();
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -119,24 +139,29 @@ export async function PUT(request: Request) {
 }
 
 /**
- * DELETE /api/tenant/categories?id=...&tenant_id=...
- * Deletes a category and cascades to its products.
+ * DELETE /api/tenant/categories?id=...&tenant_id=...&slug=...
+ * Deletes a category.
  */
 export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    const tenantId = searchParams.get('tenant_id');
+    const tenantIdParam = searchParams.get('tenant_id');
+    const slugParam = searchParams.get('slug');
 
-    if (!id || !tenantId) {
-      return NextResponse.json({ error: 'id e tenant_id são obrigatórios' }, { status: 400 });
+    if (!id) {
+      return NextResponse.json({ error: 'id da categoria é obrigatório' }, { status: 400 });
     }
 
-    const { error } = await supabase
-      .from('categories')
-      .delete()
-      .eq('id', id)
-      .eq('tenant_id', tenantId);
+    const targetTenantId = await resolveTenantId(tenantIdParam, slugParam);
+
+    let query = supabase.from('categories').delete().eq('id', id);
+
+    if (targetTenantId) {
+      query = query.eq('tenant_id', targetTenantId);
+    }
+
+    const { error } = await query;
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

@@ -6,6 +6,27 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+async function resolveTenantId(tenant_id?: string | null, slug?: string | null, category_id?: string | null): Promise<string | null> {
+  if (tenant_id) return tenant_id;
+  if (slug) {
+    const { data: tenant } = await supabase
+      .from('tenants')
+      .select('id')
+      .eq('slug', slug)
+      .maybeSingle();
+    if (tenant?.id) return tenant.id;
+  }
+  if (category_id) {
+    const { data: category } = await supabase
+      .from('categories')
+      .select('tenant_id')
+      .eq('id', category_id)
+      .maybeSingle();
+    if (category?.tenant_id) return category.tenant_id;
+  }
+  return null;
+}
+
 /**
  * GET /api/tenant/products?tenant_id=... or ?slug=...
  * Lists all products for a tenant.
@@ -13,23 +34,14 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const tenantId = searchParams.get('tenant_id');
-    const slug = searchParams.get('slug');
+    const tenantIdParam = searchParams.get('tenant_id');
+    const slugParam = searchParams.get('slug');
     const categoryId = searchParams.get('category_id');
 
-    let targetTenantId = tenantId;
-
-    if (!targetTenantId && slug) {
-      const { data: tenant } = await supabase
-        .from('tenants')
-        .select('id')
-        .eq('slug', slug)
-        .single();
-      targetTenantId = tenant?.id;
-    }
+    const targetTenantId = await resolveTenantId(tenantIdParam, slugParam);
 
     if (!targetTenantId) {
-      return NextResponse.json({ error: 'tenant_id ou slug é obrigatório' }, { status: 400 });
+      return NextResponse.json({ error: 'Restaurante não encontrado.' }, { status: 400 });
     }
 
     let query = supabase
@@ -48,7 +60,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ products: products || [] });
+    return NextResponse.json({ 
+      tenant_id: targetTenantId,
+      products: products || [] 
+    });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Erro interno' }, { status: 500 });
   }
@@ -63,6 +78,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { 
       tenant_id, 
+      slug,
       category_id, 
       name, 
       description, 
@@ -72,22 +88,33 @@ export async function POST(request: Request) {
       options_json = [] 
     } = body;
 
-    if (!tenant_id || !category_id || !name?.trim() || price === undefined) {
-      return NextResponse.json(
-        { error: 'tenant_id, category_id, nome e preço são obrigatórios' },
-        { status: 400 }
-      );
+    const targetTenantId = await resolveTenantId(tenant_id, slug, category_id);
+
+    if (!targetTenantId) {
+      return NextResponse.json({ error: 'Restaurante não identificado.' }, { status: 400 });
+    }
+
+    if (!category_id) {
+      return NextResponse.json({ error: 'Selecione uma categoria para o produto.' }, { status: 400 });
+    }
+
+    if (!name || !name.trim()) {
+      return NextResponse.json({ error: 'O nome do produto é obrigatório.' }, { status: 400 });
+    }
+
+    if (price === undefined || price === null || price === '') {
+      return NextResponse.json({ error: 'O preço do produto é obrigatório.' }, { status: 400 });
     }
 
     const parsedPrice = parseFloat(price);
     if (isNaN(parsedPrice) || parsedPrice < 0) {
-      return NextResponse.json({ error: 'Preço inválido' }, { status: 400 });
+      return NextResponse.json({ error: 'Preço inválido.' }, { status: 400 });
     }
 
     const { data, error } = await supabase
       .from('products')
       .insert({
-        tenant_id,
+        tenant_id: targetTenantId,
         category_id,
         name: name.trim(),
         description: description?.trim() || null,
@@ -100,18 +127,20 @@ export async function POST(request: Request) {
       .single();
 
     if (error) {
+      console.error('[Products POST] Supabase insert error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, product: data });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Erro interno' }, { status: 500 });
+    console.error('[Products POST] Exception:', err);
+    return NextResponse.json({ error: err.message || 'Erro interno ao cadastrar produto.' }, { status: 500 });
   }
 }
 
 /**
  * PUT /api/tenant/products
- * Updates an existing product (details, price, category or toggle is_available).
+ * Updates an existing product.
  */
 export async function PUT(request: Request) {
   try {
@@ -119,6 +148,7 @@ export async function PUT(request: Request) {
     const { 
       id, 
       tenant_id, 
+      slug,
       category_id, 
       name, 
       description, 
@@ -128,26 +158,28 @@ export async function PUT(request: Request) {
       options_json 
     } = body;
 
-    if (!id || !tenant_id) {
-      return NextResponse.json({ error: 'id e tenant_id são obrigatórios' }, { status: 400 });
+    if (!id) {
+      return NextResponse.json({ error: 'id do produto é obrigatório' }, { status: 400 });
     }
+
+    const targetTenantId = await resolveTenantId(tenant_id, slug, category_id);
 
     const updatePayload: any = {};
     if (category_id !== undefined) updatePayload.category_id = category_id;
     if (name !== undefined) updatePayload.name = name.trim();
     if (description !== undefined) updatePayload.description = description ? description.trim() : null;
-    if (price !== undefined) updatePayload.price = parseFloat(price);
+    if (price !== undefined && price !== '') updatePayload.price = parseFloat(price);
     if (image_url !== undefined) updatePayload.image_url = image_url ? image_url.trim() : null;
     if (is_available !== undefined) updatePayload.is_available = is_available;
     if (options_json !== undefined) updatePayload.options_json = options_json;
 
-    const { data, error } = await supabase
-      .from('products')
-      .update(updatePayload)
-      .eq('id', id)
-      .eq('tenant_id', tenant_id)
-      .select()
-      .single();
+    let query = supabase.from('products').update(updatePayload).eq('id', id);
+
+    if (targetTenantId) {
+      query = query.eq('tenant_id', targetTenantId);
+    }
+
+    const { data, error } = await query.select().single();
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -155,29 +187,34 @@ export async function PUT(request: Request) {
 
     return NextResponse.json({ success: true, product: data });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Erro interno' }, { status: 500 });
+    return NextResponse.json({ error: err.message || 'Erro interno ao atualizar produto.' }, { status: 500 });
   }
 }
 
 /**
- * DELETE /api/tenant/products?id=...&tenant_id=...
+ * DELETE /api/tenant/products?id=...&tenant_id=...&slug=...
  * Deletes a product.
  */
 export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    const tenantId = searchParams.get('tenant_id');
+    const tenantIdParam = searchParams.get('tenant_id');
+    const slugParam = searchParams.get('slug');
 
-    if (!id || !tenantId) {
-      return NextResponse.json({ error: 'id e tenant_id são obrigatórios' }, { status: 400 });
+    if (!id) {
+      return NextResponse.json({ error: 'id do produto é obrigatório' }, { status: 400 });
     }
 
-    const { error } = await supabase
-      .from('products')
-      .delete()
-      .eq('id', id)
-      .eq('tenant_id', tenantId);
+    const targetTenantId = await resolveTenantId(tenantIdParam, slugParam);
+
+    let query = supabase.from('products').delete().eq('id', id);
+
+    if (targetTenantId) {
+      query = query.eq('tenant_id', targetTenantId);
+    }
+
+    const { error } = await query;
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -185,6 +222,6 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Erro interno' }, { status: 500 });
+    return NextResponse.json({ error: err.message || 'Erro interno ao excluir produto.' }, { status: 500 });
   }
 }
