@@ -147,3 +147,67 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Erro interno no servidor ao processar ação' }, { status: 500 });
   }
 }
+
+/**
+ * DELETE /api/superadmin/tenants
+ * Body or Query: { tenant_id: string }
+ * 
+ * Permanently deletes a tenant, its products, categories, orders, user profile, and Auth account.
+ */
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    let tenant_id = searchParams.get('tenant_id');
+
+    if (!tenant_id) {
+      try {
+        const body = await request.json();
+        tenant_id = body.tenant_id;
+      } catch (e) {}
+    }
+
+    if (!tenant_id) {
+      return NextResponse.json({ error: 'ID do estabelecimento (tenant_id) é obrigatório.' }, { status: 400 });
+    }
+
+    console.log(`[SuperAdmin API] Excluindo estabelecimento ID: ${tenant_id}...`);
+
+    // 1. Limpar tabelas filhas associadas ao tenant para evitar erro de Chave Estrangeira (FK)
+    await supabase.from('products').delete().eq('tenant_id', tenant_id);
+    await supabase.from('categories').delete().eq('tenant_id', tenant_id);
+    await supabase.from('orders').delete().eq('tenant_id', tenant_id);
+
+    // 2. Buscar e apagar perfis e usuários no Auth do Supabase
+    const { data: userProfiles } = await supabase
+      .from('users')
+      .select('id')
+      .eq('tenant_id', tenant_id);
+
+    if (userProfiles && userProfiles.length > 0) {
+      for (const u of userProfiles) {
+        try {
+          await supabase.auth.admin.deleteUser(u.id);
+        } catch (authErr) {
+          console.warn('[SuperAdmin API] Aviso ao apagar usuário do Auth:', authErr);
+        }
+      }
+      await supabase.from('users').delete().eq('tenant_id', tenant_id);
+    }
+
+    // 3. Excluir o estabelecimento na tabela tenants
+    const { error: deleteError } = await supabase
+      .from('tenants')
+      .delete()
+      .eq('id', tenant_id);
+
+    if (deleteError) {
+      console.error('[SuperAdmin API] Erro ao excluir registro do tenant:', deleteError);
+      return NextResponse.json({ error: deleteError.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, message: 'Estabelecimento excluído com sucesso!' });
+  } catch (err: any) {
+    console.error('[SuperAdmin API] Exception in DELETE:', err);
+    return NextResponse.json({ error: 'Erro interno ao excluir estabelecimento' }, { status: 500 });
+  }
+}

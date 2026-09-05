@@ -23,7 +23,8 @@ import {
   TrendingUp, 
   X, 
   Check, 
-  Loader2 
+  Loader2,
+  Trash2
 } from 'lucide-react';
 
 interface Owner {
@@ -180,6 +181,47 @@ export default function SuperAdminDashboard() {
       showFeedback('error', 'Erro ao enviar requisição de redefinição de senha.');
     } finally {
       setIsResettingPassword(false);
+    }
+  };
+
+  // Delete Tenant Modal State
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedTenantForDelete, setSelectedTenantForDelete] = useState<Tenant | null>(null);
+  const [confirmSlugInput, setConfirmSlugInput] = useState('');
+  const [isDeletingTenant, setIsDeletingTenant] = useState(false);
+
+  // Delete Store Handler
+  const handleDeleteTenantSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedTenantForDelete) return;
+
+    if (confirmSlugInput.trim().toLowerCase() !== selectedTenantForDelete.slug.toLowerCase()) {
+      showFeedback('error', `Para confirmar, você precisa digitar exatamente o subdomínio: "${selectedTenantForDelete.slug}"`);
+      return;
+    }
+
+    setIsDeletingTenant(true);
+
+    try {
+      const res = await fetch(`/api/superadmin/tenants?tenant_id=${selectedTenantForDelete.id}`, {
+        method: 'DELETE',
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        showFeedback('success', `Estabelecimento "${selectedTenantForDelete.name}" excluído com sucesso!`);
+        setIsDeleteModalOpen(false);
+        setSelectedTenantForDelete(null);
+        setConfirmSlugInput('');
+        loadData();
+      } else {
+        showFeedback('error', data.error || 'Erro ao excluir estabelecimento.');
+      }
+    } catch (err) {
+      showFeedback('error', 'Falha na conexão com o servidor ao excluir loja.');
+    } finally {
+      setIsDeletingTenant(false);
     }
   };
 
@@ -512,6 +554,20 @@ export default function SuperAdminDashboard() {
                             <span>Senha</span>
                           </button>
 
+                          {/* Delete Store Trigger Button */}
+                          <button
+                            onClick={() => {
+                              setSelectedTenantForDelete(t);
+                              setConfirmSlugInput('');
+                              setIsDeleteModalOpen(true);
+                            }}
+                            className="px-3 py-1.5 rounded-xl bg-rose-950/60 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-800/60 font-semibold text-xs transition flex items-center gap-1"
+                            title="Excluir Estabelecimento"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Excluir</span>
+                          </button>
+
                           {/* WhatsApp Chat Direct Link */}
                           {(t.phone_whatsapp || t.owner?.phone) && (
                             <a
@@ -607,6 +663,84 @@ export default function SuperAdminDashboard() {
                 >
                   {isResettingPassword ? <Loader2 className="w-4 h-4 animate-spin" /> : <Key className="w-4 h-4" />}
                   <span>Salvar Nova Senha</span>
+                </button>
+              </div>
+            </form>
+
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: DELETE TENANT CONFIRMATION */}
+      {isDeleteModalOpen && selectedTenantForDelete && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-rose-900/50 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 relative">
+            
+            <button
+              onClick={() => {
+                setIsDeleteModalOpen(false);
+                setSelectedTenantForDelete(null);
+                setConfirmSlugInput('');
+              }}
+              className="absolute top-4 right-4 p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center justify-center font-bold">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white">Excluir Estabelecimento</h3>
+                <p className="text-xs text-rose-400 font-semibold">{selectedTenantForDelete.name}</p>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs leading-relaxed space-y-1">
+              <p className="font-bold flex items-center gap-1.5">
+                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                Ação Irreversível!
+              </p>
+              <p className="text-rose-200/80">
+                Isso excluirá permanentemente a loja <span className="font-bold text-white font-mono">{selectedTenantForDelete.slug}</span>, todos os seus produtos, categorias, histórico de pedidos e a conta do lojista.
+              </p>
+            </div>
+
+            <form onSubmit={handleDeleteTenantSubmit} className="space-y-4 pt-1">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-slate-300">
+                  Digite <span className="font-mono text-amber-400 font-bold bg-amber-500/10 px-1.5 py-0.5 rounded">{selectedTenantForDelete.slug}</span> para confirmar:
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder={`Digite ${selectedTenantForDelete.slug}`}
+                  value={confirmSlugInput}
+                  onChange={(e) => setConfirmSlugInput(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-600 text-xs focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition font-mono"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsDeleteModalOpen(false);
+                    setSelectedTenantForDelete(null);
+                    setConfirmSlugInput('');
+                  }}
+                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isDeletingTenant || confirmSlugInput.trim().toLowerCase() !== selectedTenantForDelete.slug.toLowerCase()}
+                  className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-lg shadow-rose-600/20 transition flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {isDeletingTenant ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                  <span>Excluir Definitivamente</span>
                 </button>
               </div>
             </form>
