@@ -32,7 +32,9 @@ export function middleware(request: NextRequest) {
     host === 'meupedido360.com' || 
     host === 'www.meupedido360.com' || 
     host === 'localhost' ||
-    host === '127.0.0.1';
+    host === '127.0.0.1' ||
+    host === 'lvh.me' ||
+    host === 'www.lvh.me';
 
   if (isRootDomain) {
     // Let Next.js naturally resolve /(public) group
@@ -46,6 +48,8 @@ export function middleware(request: NextRequest) {
     subdomain = host.replace('.meupedido360.com', '');
   } else if (host.endsWith('.localhost')) {
     subdomain = host.replace('.localhost', '');
+  } else if (host.endsWith('.lvh.me')) {
+    subdomain = host.replace('.lvh.me', '');
   } else {
     // Fallback for custom domains or multi-level domains
     const parts = host.split('.');
