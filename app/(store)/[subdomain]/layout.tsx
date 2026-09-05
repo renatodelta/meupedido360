@@ -140,18 +140,30 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
             <span className="text-slate-500 hidden sm:inline">•</span>
             <span className="text-slate-400 hidden sm:inline">{subdomain}.meupedido360.com</span>
           </div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 font-semibold">
+            <a 
+              href="/admin"
+              className="px-3 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500 text-emerald-300 hover:text-white border border-emerald-500/30 font-bold transition flex items-center gap-1.5 shadow-sm"
+            >
+              📊 Pedidos ao Vivo
+            </a>
             <a 
               href="/admin/produtos"
               className="px-3 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30 font-bold transition flex items-center gap-1.5 shadow-sm"
             >
-              🍽️ Gerenciar Cardápio
+              🍽️ Cardápio
             </a>
             <a 
               href="/admin/onboarding"
               className="px-3 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-750 font-semibold transition flex items-center gap-1.5"
             >
-              🎨 Personalizar Visual
+              🎨 Visual
+            </a>
+            <a 
+              href="/"
+              className="px-3 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 transition flex items-center gap-1.5"
+            >
+              🌐 Vitrine
             </a>
           </div>
         </div>
