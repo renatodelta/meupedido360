@@ -56,8 +56,8 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Sanitize extraction
-  subdomain = subdomain.trim();
+  // Sanitize extraction (only allow alphanumeric characters and hyphens)
+  subdomain = subdomain.toLowerCase().trim().replace(/[^a-z0-9-]/g, '');
 
   // 5. If extracted subdomain is empty or "www", fallback to public root routing
   if (!subdomain || subdomain === 'www') {

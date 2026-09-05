@@ -2,7 +2,6 @@ import React from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { notFound } from 'next/navigation';
 import { unstable_noStore as noStore } from 'next/cache';
-import '../../globals.css';
 
 // Configure Supabase client for Server Component
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -33,6 +32,28 @@ export const revalidate = 0;
  * 2. Checks active status and displays premium block if suspended.
  * 3. Injects custom brand colors as CSS Custom Properties for Tailwind CSS.
  */
+export async function generateMetadata({ params }: TenantLayoutProps) {
+  const { subdomain } = params;
+  try {
+    const { data: tenant } = await supabase
+      .from('tenants')
+      .select('name')
+      .eq('slug', subdomain)
+      .single();
+
+    if (tenant?.name) {
+      return {
+        title: `${tenant.name} - Cardápio Digital & Delivery`,
+        description: `Peça online no cardápio digital de ${tenant.name}. Delivery rápido e prático.`,
+      };
+    }
+  } catch {}
+
+  return {
+    title: 'Cardápio Digital & Delivery',
+  };
+}
+
 export default async function TenantLayout({ children, params }: TenantLayoutProps) {
   noStore();
   const { subdomain } = params;
@@ -52,48 +73,42 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
   // 2. Render premium suspension screen if the subscription status is suspended
   if (tenant.plan_status === 'suspended') {
     return (
-      <html lang="pt-BR">
-        <head>
-          <title>{tenant.name} - Loja Suspensa</title>
-          <meta name="robots" content="noindex, nofollow" />
-        </head>
-        <body className="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-6 font-sans">
-          <div className="max-w-md w-full text-center space-y-6 bg-slate-900/60 backdrop-blur-xl p-8 rounded-3xl border border-slate-800 shadow-2xl">
-            {tenant.logo_url ? (
-              <img 
-                src={tenant.logo_url} 
-                alt={tenant.name} 
-                className="w-24 h-24 mx-auto rounded-full object-cover border-4 border-rose-500/20 shadow-xl"
-              />
-            ) : (
-              <div className="w-24 h-24 mx-auto rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center text-4xl font-black shadow-inner">
-                {tenant.name.substring(0, 2).toUpperCase()}
-              </div>
-            )}
-            
-            <div className="space-y-2">
-              <h1 className="text-2xl font-bold tracking-tight text-white">{tenant.name}</h1>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20 uppercase tracking-widest">
-                Cardápio Inativo
-              </span>
+      <div className="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-6 font-sans">
+        <div className="max-w-md w-full text-center space-y-6 bg-slate-900/60 backdrop-blur-xl p-8 rounded-3xl border border-slate-800 shadow-2xl">
+          {tenant.logo_url ? (
+            <img 
+              src={tenant.logo_url} 
+              alt={tenant.name} 
+              className="w-24 h-24 mx-auto rounded-full object-cover border-4 border-rose-500/20 shadow-xl"
+            />
+          ) : (
+            <div className="w-24 h-24 mx-auto rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center text-4xl font-black shadow-inner">
+              {tenant.name.substring(0, 2).toUpperCase()}
             </div>
-
-            <p className="text-slate-400 text-sm leading-relaxed">
-              O cardápio digital deste restaurante está temporariamente fora do ar. 
-              Se você é o administrador desta conta, regularize sua assinatura no painel do cliente.
-            </p>
-
-            <div className="pt-4 border-t border-slate-800">
-              <a
-                href="https://meupedido360.com/login"
-                className="inline-flex items-center justify-center w-full px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 rounded-xl transition duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-rose-500/20"
-              >
-                Acessar Área do Lojista
-              </a>
-            </div>
+          )}
+          
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold tracking-tight text-white">{tenant.name}</h1>
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20 uppercase tracking-widest">
+              Cardápio Inativo
+            </span>
           </div>
-        </body>
-      </html>
+
+          <p className="text-slate-400 text-sm leading-relaxed">
+            O cardápio digital deste restaurante está temporariamente fora do ar. 
+            Se você é o administrador desta conta, regularize sua assinatura no painel do cliente.
+          </p>
+
+          <div className="pt-4 border-t border-slate-800">
+            <a
+              href="https://meupedido360.com/login"
+              className="inline-flex items-center justify-center w-full px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 rounded-xl transition duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-rose-500/20"
+            >
+              Acessar Área do Lojista
+            </a>
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -110,19 +125,13 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
   } as React.CSSProperties;
 
   return (
-    <html lang="pt-BR" style={themeVars}>
-      <head>
-        <title>{tenant.name} - Cardápio Digital & Delivery</title>
-        <meta name="description" content={`Peça online no cardápio digital de ${tenant.name}. Delivery rápido e prático.`} />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-      </head>
-      <body 
-        style={{ 
-          backgroundColor: 'var(--background-color)',
-          ...themeVars
-        }}
-        className="min-h-screen font-sans antialiased text-slate-800 transition-colors duration-300 pb-12"
-      >
+    <div 
+      style={{ 
+        backgroundColor: 'var(--background-color)',
+        ...themeVars
+      }}
+      className="min-h-screen font-sans antialiased text-slate-800 transition-colors duration-300 pb-12"
+    >
         {/* MERCHANT ADMIN TOP BAR */}
         <div className="bg-slate-950 text-slate-300 text-xs px-4 sm:px-8 py-2 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
@@ -222,7 +231,6 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {children}
         </main>
-      </body>
-    </html>
+    </div>
   );
 }

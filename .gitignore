@@ -9,7 +9,9 @@
 *.tsbuildinfo
 
 # Local environment files (contains secret API keys)
+.env
 .env*.local
+.env.production
 
 # Logs
 npm-debug.log*

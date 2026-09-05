@@ -1,3 +1,4 @@
+import './globals.css';
 import React from 'react';
 
 export const metadata = {
@@ -5,20 +6,16 @@ export const metadata = {
   description: 'Crie seu cardápio digital em segundos com subdomínio próprio e integração com Mercado Pago.',
 };
 
-/**
- * app/(public)/layout.tsx
- * 
- * Root layout for the public marketing site.
- * Imports globals.css to apply Tailwind styling.
- */
-export default function PublicLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      {children}
-    </div>
+    <html lang="pt-BR" className="scroll-smooth">
+      <body className="antialiased min-h-screen bg-slate-950 text-slate-100">
+        {children}
+      </body>
+    </html>
   );
 }
