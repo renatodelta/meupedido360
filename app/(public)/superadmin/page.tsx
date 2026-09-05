@@ -453,7 +453,9 @@ export default function SuperAdminDashboard() {
                             <div className="font-extrabold text-white text-sm flex items-center gap-1.5">
                               <span>{t.name}</span>
                               <a
-                                href={`http://${t.slug}.localhost:3000`}
+                                href={typeof window !== 'undefined' && (window.location.host.includes('localhost') || window.location.host.includes('127.0.0.1') || window.location.host.includes('lvh.me'))
+                                  ? `http://${t.slug}.lvh.me:3000`
+                                  : `https://${t.slug}.meupedido360.com`}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="text-slate-500 hover:text-rose-400 transition"

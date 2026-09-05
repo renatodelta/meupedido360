@@ -57,11 +57,14 @@ export default function LoginPage() {
 
       // 3. Redirect to Tenant Admin Dashboard
       const host = window.location.hostname;
-      const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
+      const isLocal = host.includes('localhost') || host.includes('127.0.0.1') || host.includes('lvh.me');
+
+      const parts = window.location.host.split(':')[0].split('.');
+      const rootDomain = parts.length >= 2 ? parts.slice(-2).join('.') : 'meupedido360.com';
 
       const redirectTarget = isLocal
-        ? `http://${tenantSlug}.localhost:3000/admin`
-        : `https://${tenantSlug}.meupedido360.com/admin`;
+        ? `http://${tenantSlug}.lvh.me:3000/admin`
+        : `https://${tenantSlug}.${rootDomain}/admin`;
 
       window.location.href = redirectTarget;
     } catch (err: any) {

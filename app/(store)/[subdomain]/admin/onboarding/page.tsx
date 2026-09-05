@@ -227,7 +227,17 @@ export default function OnboardingPage() {
       
       // Auto redirect to dynamic menu to view change after 2.5 seconds
       setTimeout(() => {
-        router.push(`http://${subdomain}.localhost:3000/`);
+        if (typeof window !== 'undefined') {
+          const currentHost = window.location.host;
+          const isLocal = currentHost.includes('localhost') || currentHost.includes('127.0.0.1') || currentHost.includes('lvh.me');
+          if (isLocal) {
+            window.location.href = `${window.location.protocol}//${subdomain}.lvh.me:3000/`;
+          } else {
+            const parts = currentHost.split(':')[0].split('.');
+            const rootDomain = parts.length >= 2 ? parts.slice(-2).join('.') : 'meupedido360.com';
+            window.location.href = `${window.location.protocol}//${subdomain}.${rootDomain}/`;
+          }
+        }
       }, 2500);
 
     } catch (err: any) {
@@ -342,13 +352,19 @@ export default function OnboardingPage() {
               <div className="space-y-2 p-3 bg-slate-950/40 border border-slate-850 rounded-xl">
                 <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Primária</span>
                 <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={primaryColor}
-                    onChange={(e) => setPrimaryColor(e.target.value)}
-                    className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0"
-                  />
-                  <span className="text-xs font-mono font-semibold">{primaryColor.toUpperCase()}</span>
+                  <div 
+                    className="relative w-8 h-8 rounded-lg border border-slate-700 shadow-sm overflow-hidden flex-shrink-0 cursor-pointer transition-transform hover:scale-105"
+                    style={{ backgroundColor: primaryColor }}
+                    title="Clique para alterar a cor primária"
+                  >
+                    <input
+                      type="color"
+                      value={primaryColor}
+                      onChange={(e) => setPrimaryColor(e.target.value)}
+                      className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                    />
+                  </div>
+                  <span className="text-xs font-mono font-semibold text-white">{primaryColor.toUpperCase()}</span>
                 </div>
               </div>
 
@@ -356,13 +372,19 @@ export default function OnboardingPage() {
               <div className="space-y-2 p-3 bg-slate-950/40 border border-slate-850 rounded-xl">
                 <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Secundária</span>
                 <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={secondaryColor}
-                    onChange={(e) => setSecondaryColor(e.target.value)}
-                    className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0"
-                  />
-                  <span className="text-xs font-mono font-semibold">{secondaryColor.toUpperCase()}</span>
+                  <div 
+                    className="relative w-8 h-8 rounded-lg border border-slate-700 shadow-sm overflow-hidden flex-shrink-0 cursor-pointer transition-transform hover:scale-105"
+                    style={{ backgroundColor: secondaryColor }}
+                    title="Clique para alterar a cor secundária"
+                  >
+                    <input
+                      type="color"
+                      value={secondaryColor}
+                      onChange={(e) => setSecondaryColor(e.target.value)}
+                      className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                    />
+                  </div>
+                  <span className="text-xs font-mono font-semibold text-white">{secondaryColor.toUpperCase()}</span>
                 </div>
               </div>
 
@@ -370,13 +392,19 @@ export default function OnboardingPage() {
               <div className="space-y-2 p-3 bg-slate-950/40 border border-slate-850 rounded-xl">
                 <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Fundo</span>
                 <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={backgroundColor}
-                    onChange={(e) => setBackgroundColor(e.target.value)}
-                    className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0"
-                  />
-                  <span className="text-xs font-mono font-semibold">{backgroundColor.toUpperCase()}</span>
+                  <div 
+                    className="relative w-8 h-8 rounded-lg border border-slate-700 shadow-sm overflow-hidden flex-shrink-0 cursor-pointer transition-transform hover:scale-105"
+                    style={{ backgroundColor: backgroundColor }}
+                    title="Clique para alterar a cor de fundo"
+                  >
+                    <input
+                      type="color"
+                      value={backgroundColor}
+                      onChange={(e) => setBackgroundColor(e.target.value)}
+                      className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                    />
+                  </div>
+                  <span className="text-xs font-mono font-semibold text-white">{backgroundColor.toUpperCase()}</span>
                 </div>
               </div>
 

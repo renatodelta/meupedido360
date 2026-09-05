@@ -295,7 +295,7 @@ export default function AdminProductsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <a 
-              href={`http://${subdomain}.localhost:3000/`}
+              href="/"
               className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition flex items-center gap-2 text-xs font-semibold"
             >
               <ArrowLeft className="w-4 h-4" />

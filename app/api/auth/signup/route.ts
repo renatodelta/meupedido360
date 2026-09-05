@@ -136,11 +136,20 @@ export async function POST(request: Request) {
       console.warn('[Signup] User profile upsert notice:', userProfileError.message);
     }
 
-    // 7. Route based on selected plan:
-    const isLocalhost = appUrl.includes('localhost');
-    const storeDashboardUrl = isLocalhost 
-      ? `http://${slug}.localhost:3000/admin/onboarding`
-      : `https://${slug}.meupedido360.com/admin/onboarding`;
+    // 7. Route based on selected plan (Dynamically construct store URL)
+    const requestHost = request.headers.get('x-forwarded-host') || request.headers.get('host') || '';
+    const isLocalhost = requestHost.includes('localhost') || requestHost.includes('127.0.0.1') || requestHost.includes('lvh.me');
+
+    let storeDashboardUrl = '';
+    if (isLocalhost) {
+      storeDashboardUrl = `http://${slug}.lvh.me:3000/admin/onboarding`;
+    } else {
+      // Production: extract root domain (e.g. meupedido360.com)
+      const hostWithoutPort = requestHost.split(':')[0];
+      const parts = hostWithoutPort.split('.');
+      const rootDomain = parts.length >= 2 ? parts.slice(-2).join('.') : 'meupedido360.com';
+      storeDashboardUrl = `https://${slug}.${rootDomain}/admin/onboarding`;
+    }
 
     // PLAN: TRIAL
     if (plan === 'trial') {
