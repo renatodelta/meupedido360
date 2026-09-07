@@ -1,30 +1,25 @@
-# Walkthrough: Máscara e Formatação Dinâmica de Telefones em todo o Sistema
+# Walkthrough: Carrinho de Compras Interativo e Checkout na Vitrine do Cliente
 
-Implementamos a **máscara dinâmica de telefone brasileiro `(XX) XXXXX-XXXX` (ou `(XX) XXXX-XXXX` para fixo)** tanto no momento da digitação pelo usuário quanto na exibição de telefones em todas as telas do sistema.
+Implementamos a funcionalidade completa do **Carrinho de Compras Flutuante, Gaveta de Checkout e Envio de Pedidos em Tempo Real** na vitrine pública do estabelecimento (`[subdomain].meupedido360.com`).
 
 ---
 
 ### 🚀 O que foi construído:
 
-1. **Utilitário de Máscara (`lib/formatters.ts`)**:
-   - **Local:** [lib/formatters.ts](file:///c:/xampp/htdocs/meupedido360/lib/formatters.ts)
-   - Função `formatPhone(value)`:
-     - Formata em tempo real conforme os dígitos são digitados.
-     - Ajusta dinamicamente a posição do hífen (telefone móvel com 9 dígitos ou fixo com 8 dígitos).
-     - Exemplo: `12991530244` vira automaticamente **`(12) 99153-0244`**.
-
-2. **Formulário de Cadastro de Loja (`/signup`)**:
-   - Campo de WhatsApp comercial com máscara automática ao digitar e limite de 15 caracteres.
-
-3. **Módulo de Entregadores (`/admin/drivers`)**:
-   - Campo de telefone na criação de entregadores com máscara progressiva.
-   - Telefones exibidos na listagem e na modal de acerto de caixa devidamente formatados.
-
-4. **Painel de Pedidos & KDS (`/admin`)**:
-   - Telefone de clientes nos cartões de pedidos (Novos, Em Preparo, Prontos e Em Rota) e na modal de detalhes formatados no padrão brasileiro.
-
-5. **Painel Super Admin (`/superadmin`)**:
-   - Exibição do WhatsApp de proprietários e lojas formatada na tabela geral de estabelecimentos.
+1. **Componente Cliente Interativo (`StoreMenuClient.tsx`)**:
+   - **Local:** [app/(store)/[subdomain]/StoreMenuClient.tsx](file:///c:/xampp/htdocs/meupedido360/app/%28store%29/%5Bsubdomain%5D/StoreMenuClient.tsx)
+   - **Adição e Remoção Dinâmica:** Botão de *"Adicionar"* vira um controlador `[-] [Qtd] [+]` quando o item já está na sacola.
+   - **Barra Flutuante de Sacola:** Surge suavemente na parte inferior quando há itens selecionados, exibindo quantidade de itens, subtotal em tempo real e botão *"Ver Sacola"*.
+   - **Gaveta / Modal de Checkout Completa:**
+     - Revisão detalhada de itens com alteração de quantidade.
+     - Cálculo de subtotal, taxa de entrega e total geral.
+     - Formulário do cliente: Nome, WhatsApp (com máscara automática `(XX) XXXXX-XXXX`) e Endereço de Entrega (Rua, Número, Bairro, Complemento).
+     - **Opções de Pagamento na Entrega:**
+       - ⚡ **PIX na Entrega**
+       - 💳 **Cartão na Entrega** (Levar maquininha)
+       - 💵 **Dinheiro na Entrega** (com campo para informar troco)
+   - **Integração em Tempo Real com o KDS:** Ao confirmar o pedido, dispara requisição `POST /api/tenant/orders`, salvando no Supabase e notificando a cozinha com alerta sonoro e inclusão no Kanban instantaneamente.
+   - **Tela de Sucesso do Pedido:** Exibe o número do pedido (`#XXXXXX`) e confirmação de recebimento.
 
 ---
 
@@ -32,4 +27,4 @@ Implementamos a **máscara dinâmica de telefone brasileiro `(XX) XXXXX-XXXX` (o
 
 - **TypeScript (`npx tsc --noEmit`):** `0 erros`
 - **Next.js Production Build (`npm run build`):** `✓ 16/16 páginas compiladas com sucesso`
-- **Git Push:** Alterações commitadas e enviadas para o repositório remoto no commit `230efd6`.
+- **Git Push:** Código commitado e enviado para o repositório remoto no commit `a1b1346`.
