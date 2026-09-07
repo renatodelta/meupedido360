@@ -18,7 +18,8 @@ import {
   Sparkles,
   ToggleLeft,
   ToggleRight,
-  AlertCircle
+  AlertCircle,
+  UploadCloud
 } from 'lucide-react';
 
 interface Category {
@@ -71,6 +72,105 @@ export default function AdminProductsPage() {
   const [feedbackMsg, setFeedbackMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const [tenantId, setTenantId] = useState<string | null>(null);
+
+  // Image Upload & Compression State
+  const [isCompressingImage, setIsCompressingImage] = useState(false);
+  const [imageSizeKb, setImageSizeKb] = useState<number | null>(null);
+
+  // Compress image to ensure it does not exceed 200 KB
+  const compressImage = (file: File, maxSizeBytes: number = 200 * 1024): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (e) => {
+        const img = new Image();
+        img.src = e.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          // Max dimension clamp (e.g. 900px maintains great quality while keeping file size small)
+          const maxDimension = 900;
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = Math.round((height * maxDimension) / width);
+              width = maxDimension;
+            } else {
+              width = Math.round((width * maxDimension) / height);
+              height = maxDimension;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(e.target?.result as string);
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Iterate quality until size is under maxSizeBytes (200 KB)
+          let quality = 0.85;
+          let dataUrl = canvas.toDataURL('image/jpeg', quality);
+
+          while (Math.round((dataUrl.length * 3) / 4) > maxSizeBytes && quality > 0.2) {
+            quality -= 0.1;
+            dataUrl = canvas.toDataURL('image/jpeg', quality);
+          }
+
+          // If still slightly over 200 KB, scale down dimensions
+          if (Math.round((dataUrl.length * 3) / 4) > maxSizeBytes) {
+            const scaledCanvas = document.createElement('canvas');
+            scaledCanvas.width = Math.round(width * 0.75);
+            scaledCanvas.height = Math.round(height * 0.75);
+            const sCtx = scaledCanvas.getContext('2d');
+            if (sCtx) {
+              sCtx.drawImage(canvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
+              dataUrl = scaledCanvas.toDataURL('image/jpeg', 0.65);
+            }
+          }
+
+          resolve(dataUrl);
+        };
+        img.onerror = (err) => reject(err);
+      };
+      reader.onerror = (err) => reject(err);
+    });
+  };
+
+  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      showFeedback('error', 'Por favor, selecione um arquivo de imagem válido (JPG, PNG, WEBP).');
+      return;
+    }
+
+    try {
+      setIsCompressingImage(true);
+      const compressedDataUrl = await compressImage(file, 200 * 1024);
+      const sizeInBytes = Math.round((compressedDataUrl.length * 3) / 4);
+      const sizeKb = Math.round(sizeInBytes / 1024);
+
+      setImageSizeKb(sizeKb);
+      setProductForm(prev => ({ ...prev, image_url: compressedDataUrl }));
+      showFeedback('success', `Foto carregada com sucesso (${sizeKb} KB)!`);
+    } catch (err) {
+      console.error('Erro ao processar imagem:', err);
+      showFeedback('error', 'Falha ao processar e comprimir a imagem.');
+    } finally {
+      setIsCompressingImage(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setProductForm(prev => ({ ...prev, image_url: '' }));
+    setImageSizeKb(null);
+  };
 
   // 1. Initial Load: Fetch Tenant, Categories and Products
   useEffect(() => {
@@ -126,6 +226,12 @@ export default function AdminProductsPage() {
         image_url: product.image_url || '',
         is_available: product.is_available,
       });
+      if (product.image_url) {
+        const approxKb = Math.round((product.image_url.length * 3) / 4 / 1024);
+        setImageSizeKb(approxKb > 0 ? approxKb : null);
+      } else {
+        setImageSizeKb(null);
+      }
     } else {
       setEditingProduct(null);
       setProductForm({
@@ -136,6 +242,7 @@ export default function AdminProductsPage() {
         image_url: '',
         is_available: true,
       });
+      setImageSizeKb(null);
     }
     setIsProductModalOpen(true);
   };
@@ -629,19 +736,88 @@ export default function AdminProductsPage() {
                 />
               </div>
 
-              {/* Image URL */}
+              {/* Product Photo Upload (No link input, auto-compressed to < 200KB) */}
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  URL da Foto do Produto
+                  Foto do Produto (Upload com compressão automática)
                 </label>
-                <input
-                  type="url"
-                  placeholder="https://exemplo.com/foto-do-burger.jpg"
-                  value={productForm.image_url}
-                  onChange={(e) => setProductForm({ ...productForm, image_url: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:border-rose-500"
-                />
-                <p className="text-[11px] text-slate-500 mt-1">Cole um link direto da imagem (Unsplash, Imgur, CDN, etc).</p>
+
+                {productForm.image_url ? (
+                  <div className="relative rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 p-3 flex items-center gap-4">
+                    <div className="w-20 h-20 rounded-xl overflow-hidden border border-slate-800 bg-slate-900 flex-shrink-0">
+                      <img
+                        src={productForm.image_url}
+                        alt="Pré-visualização"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">
+                          <Check className="w-3.5 h-3.5" /> Foto Anexada
+                        </span>
+                        {imageSizeKb && (
+                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-mono">
+                            {imageSizeKb} KB (máx 200 KB)
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-slate-400">
+                        Comprimida automaticamente para carregamento ultrarrápido no cardápio.
+                      </p>
+                      <div className="flex items-center gap-2 pt-1">
+                        <label className="text-xs font-semibold text-rose-400 hover:text-rose-300 cursor-pointer transition">
+                          <span>Trocar foto</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageFileChange}
+                            className="hidden"
+                          />
+                        </label>
+                        <span className="text-slate-600">•</span>
+                        <button
+                          type="button"
+                          onClick={handleRemoveImage}
+                          className="text-xs font-semibold text-slate-500 hover:text-rose-400 transition"
+                        >
+                          Remover foto
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="border-2 border-dashed border-slate-800 hover:border-rose-500/50 rounded-2xl p-6 bg-slate-950/40 hover:bg-slate-900/40 transition flex flex-col items-center justify-center gap-2 cursor-pointer group">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageFileChange}
+                      className="hidden"
+                    />
+                    {isCompressingImage ? (
+                      <>
+                        <Loader2 className="w-8 h-8 text-rose-500 animate-spin" />
+                        <span className="text-xs text-slate-300 font-semibold">
+                          Comprimindo e otimizando imagem...
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-12 h-12 rounded-xl bg-slate-900 text-slate-400 group-hover:text-rose-400 group-hover:bg-rose-500/10 flex items-center justify-center transition">
+                          <UploadCloud className="w-6 h-6" />
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm font-semibold text-white group-hover:text-rose-400 transition">
+                            Clique para enviar a foto do produto
+                          </p>
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            PNG, JPG ou WEBP (Comprimido automaticamente para até 200 KB)
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </label>
+                )}
               </div>
 
               {/* Modal Actions */}
