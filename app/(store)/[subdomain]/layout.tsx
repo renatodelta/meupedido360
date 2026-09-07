@@ -134,11 +134,25 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
     >
         {/* MERCHANT ADMIN TOP BAR */}
         <div className="bg-slate-950 text-slate-300 text-xs px-4 sm:px-8 py-2 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span className="font-semibold text-white">Painel do Restaurante</span>
+            <span className="font-semibold text-white">{tenant.name}</span>
             <span className="text-slate-500 hidden sm:inline">•</span>
             <span className="text-slate-400 hidden sm:inline">{subdomain}.meupedido360.com</span>
+            <span className="text-slate-500 hidden sm:inline">•</span>
+            {tenant.plan_status === 'active' ? (
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">
+                💎 Plano Pro Ativo
+              </span>
+            ) : tenant.plan_status === 'trial' ? (
+              <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 text-[10px] font-bold">
+                ⏳ Período Trial (7 Dias)
+              </span>
+            ) : (
+              <span className="px-2.5 py-0.5 rounded-full bg-rose-500/15 text-rose-400 border border-rose-500/30 text-[10px] font-bold">
+                ⛔ Assinatura Suspensa
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2 font-semibold">
             <a 
