@@ -1,63 +1,93 @@
-# Walkthrough: Geolocalização no Checkout & Acompanhamento de Pedido em Tempo Real (Kanban do Consumidor)
+# Walkthrough: Geolocalização, Rastreamento ao Vivo & Layout Profissional de Comunicados WhatsApp
 
-Implementamos as duas novas funcionalidades solicitadas:
-1. **Botão Opcional de Localização (GPS)** para preenchimento automático inteligente do endereço de entrega (Rua e Bairro), mantendo a opção de preenchimento 100% manual.
-2. **Acompanhamento do Pedido em Tempo Real (Kanban do Consumidor)** com as etapas solicitadas (`1. Recebido`, `2. Em Preparo`, `3. Prontos p/ Saída`, `4. Em Rota de Entrega` e `5. Entregue`), atualizado instantaneamente via **Supabase Realtime (WebSocket)**.
+Atualizações implementadas com sucesso:
+1. **Eliminação dos caracteres corrompidos (`?`) e modernização visual completa de todos os comunicados WhatsApp**.
+2. **Geolocalização Opcional (GPS)** no checkout da vitrine para autopreenchimento de endereço.
+3. **Acompanhamento do Pedido em Tempo Real (Kanban do Consumidor)** com WebSocket via Supabase Realtime.
 
 ---
 
-### 📍 1. Geolocalização Inteligente no Checkout
+### 💬 1. Modernização do Layout dos Comunicados WhatsApp & Correção do `?`
+
+- **Novo Módulo Centralizado:** [lib/whatsapp.ts](file:///c:/xampp/htdocs/meupedido360/lib/whatsapp.ts)
+- **Diagnóstico do Problema:**
+  - O encurtador `wa.me` utiliza um redirecionamento HTTP 302 que descarta a codificação UTF-8 de emojis de 4 bytes em diversos navegadores e no WhatsApp Web, convertendo-os no caractere de substituição `\uFFFD` (losango preto com ponto de interrogação `?`).
+- **Solução Implementada:**
+  - **Endpoint Direto:** Migração de todos os links de `wa.me` para `https://api.whatsapp.com/send?phone=...&text=...`, que preserva integralmente a codificação sem passar pelo redirecionador quebrado.
+  - **Tipografia Universal:** Substituição de emojis frágeis por marcadores universais (`•`, `►`, `═`, `─`) e sintaxe nativa do WhatsApp (`*negrito*`, `_itálico_`).
+  - **Cálculo Automático de Balanço:** No Fechamento de Caixa, o sistema agora calcula automaticamente o saldo líquido, indicando explicitamente quem deve pagar quem (*Saldo a Pagar ao Entregador* ou *Saldo a Devolver ao Caixa da Loja*).
+
+#### Exemplo do Novo Comunicado de Fechamento de Caixa:
+```text
+========================================
+   *FECHAMENTO DE CAIXA • MOTOBOY*
+========================================
+
+*Entregador:* Carlos Silva
+*Estabelecimento:* Padaria Central
+*Data:* 06/09/2026 às 23:31
+
+----------------------------------------
+*RESUMO OPERACIONAL DO TURNO:*
+• Entregas Realizadas: 3
+• Taxas de Entrega a Receber: R$ 16,00
+• Dinheiro Coletado a Devolver: R$ 0,00
+----------------------------------------
+
+*BALANÇO FINAL DO ACERTO:*
+► A PAGAR AO ENTREGADOR: *R$ 16,00*
+
+========================================
+_Comprovante emitido via MeuPedido360_
+```
+
+#### Exemplo do Novo Ticket de Despacho para o Motoboy:
+```text
+========================================
+   *NOVA ENTREGA • PEDIDO #ABC123*
+========================================
+
+*Loja:* Padaria Central
+*Cliente:* João Silva
+*Telefone:* (11) 99999-9999
+----------------------------------------
+*ENDEREÇO DE ENTREGA:*
+• Av. Paulista, 1500, Bela Vista, São Paulo (Apto 42)
+
+*ROTA NO GOOGLE MAPS:*
+https://maps.google.com/?q=...
+----------------------------------------
+*ITENS DO PACOTE:*
+• 2x MeuPedido Smash Bacon
+• 1x Batata Rústica c/ Alecrim
+----------------------------------------
+*CONDIÇÃO DE COBRANÇA:*
+• Método: PIX ENTREGA
+• Status: *JÁ PAGO ONLINE (NÃO COBRAR)*
+========================================
+_MeuPedido360 • Despacho Rápido_
+```
+
+---
+
+### 📍 2. Geolocalização Inteligente no Checkout
 
 - **Arquivo Modificado:** [StoreMenuClient.tsx](file:///c:/xampp/htdocs/meupedido360/app/%28store%29/%5Bsubdomain%5D/StoreMenuClient.tsx)
-- **Botão Opcional "📍 Usar minha localização atual":**
-  - Dispara a permissão nativa de GPS (`navigator.geolocation.getCurrentPosition`).
-  - Realiza geocodificação reversa usando a API aberta do **OpenStreetMap Nominatim** em português (sem necessidade de chaves pagas do Google Maps).
-  - Preenche automaticamente os campos **Rua / Avenida** e **Bairro**.
-  - Move automaticamente o foco do cursor diretamente para o campo **Número**, para que o cliente digite apenas o número do imóvel e complemento.
-  - Exibe feedback visual de sucesso (`✅ Localização identificada!`) ou alerta explicativo amigável em caso de recusa de permissão.
-  - **100% Opcional:** Todos os campos continuam livres para digitação manual se o cliente preferir.
+- Botão opcional *"📍 Usar minha localização atual"* preenche automaticamente **Rua** e **Bairro** via OpenStreetMap Nominatim e move o foco para o campo de **Número**.
+- Opção 100% manual mantida.
 
 ---
 
-### 📊 2. Kanban de Acompanhamento do Pedido para o Consumidor
+### 📊 3. Kanban de Acompanhamento do Consumidor
 
-- **Novo Arquivo Criado:** [app/(store)/[subdomain]/pedido/[id]/page.tsx](file:///c:/xampp/htdocs/meupedido360/app/%28store%29/%5Bsubdomain%5D/pedido/%5Bid%5D/page.tsx)
-- **Rota Dedicada:** `[subdomain].meupedido360.com/pedido/[id]` ou `localhost:3000/[subdomain]/pedido/[id]`.
-- **Evolução do Pedido nas 5 Etapas do Kanban:**
-  1. 🕒 **1. Recebido (Pendente):** Pedido registrado no sistema, aguardando início pela cozinha.
-  2. 👨‍🍳 **2. Em Preparo:** Cozinha aceitou o pedido e está preparando os pratos.
-  3. 📦 **3. Prontos p/ Saída:** Pedido embalado e pronto para retirada pelo entregador.
-  4. 🛵 **4. Em Rota de Entrega:** Motoboy a caminho do endereço do cliente.
-  5. ✅ **5. Entregue:** Pedido concluído com sucesso.
-- **Sincronização em Tempo Real (Supabase WebSocket):**
-  - Assinatura no canal `postgres_changes` na tabela `orders` filtrando pelo ID do pedido.
-  - Quando a cozinha move o pedido no painel `/admin`, a tela do cliente avança **instantaneamente**, sem precisar atualizar a página.
-  - **Alerta Sonoro (Chime):** Efeito sonoro sintetizado em Web Audio API avisa o cliente quando o status muda.
-- **Quadro Kanban Visual:**
-  - 5 colunas interativas onde o card do pedido fica posicionado na coluna atual com bordas brilhantes, animação pulsante e barra de progresso.
-  - As colunas anteriores são marcadas como `Concluído ✓`.
-- **Card do Entregador:**
-  - Quando em rota, exibe o nome do motoboy, modelo do veículo, placa e botão com link direto para WhatsApp com o entregador.
-- **Resumo do Pedido & Endereço:**
-  - Itens detalhados, subtotal, taxa de entrega, total e endereço completo.
-  - Botão direto para tirar dúvidas com o restaurante pelo WhatsApp.
-- **Acesso Facilitado:**
-  - Botão destacado *"🚀 Acompanhar Pedido ao Vivo"* logo após finalizar o pedido na gaveta.
-  - Banner inteligente no topo do cardápio informando se há um pedido recente em andamento com botão direto de retorno ao rastreio.
+- **Arquivo Criado:** [app/(store)/[subdomain]/pedido/[id]/page.tsx](file:///c:/xampp/htdocs/meupedido360/app/%28store%29/%5Bsubdomain%5D/pedido/%5Bid%5D/page.tsx)
+- Evolução pelas 5 etapas com Supabase Realtime ativo:
+  `1. Recebido` ➔ `2. Em Preparo` ➔ `3. Prontos p/ Saída` ➔ `4. Em Rota` ➔ `5. Entregue`.
+- Alerta sonoro via Web Audio API e card do motoboy em rota.
 
 ---
 
-### 🛠️ 3. Backend & APIs
+### 🧪 4. Resultados dos Testes
 
-- **Arquivo Modificado:** [app/api/tenant/orders/route.ts](file:///c:/xampp/htdocs/meupedido360/app/api/tenant/orders/route.ts)
-- Suporte a busca individual por `order_id` na rota `GET /api/tenant/orders?order_id=xyz`, retornando o pedido, itens associados, entregador e metadados da loja para exibição pública de rastreamento.
-
----
-
-### 🧪 4. Resultados dos Testes & Validação
-
-- **TypeScript (`npx.cmd tsc --noEmit`):** `0 erros` de tipagem.
-- **Next.js Production Build (`npm.cmd run build`):**
-  - Compilação realizada com sucesso:
-  - `├ ƒ /[subdomain]/pedido/[id] (7.28 kB, 159 kB)` gerado dinamicamente.
-  - 16/16 rotas validadas.
+- **TypeScript (`tsc --noEmit`):** `0 erros`.
+- **Next.js Production Build (`npm run build`):** `16/16 páginas compiladas com sucesso`.

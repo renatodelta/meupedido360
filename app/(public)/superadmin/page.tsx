@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { formatPhone } from '@/lib/formatters';
+import { createWhatsAppUrl } from '@/lib/whatsapp';
 import { 
   Zap, 
   ShieldCheck, 
@@ -571,9 +572,10 @@ export default function SuperAdminDashboard() {
                           {/* WhatsApp Chat Direct Link */}
                           {(t.phone_whatsapp || t.owner?.phone) && (
                             <a
-                              href={`https://wa.me/55${(t.phone_whatsapp || t.owner?.phone || '').replace(/\D/g, '')}?text=${encodeURIComponent(
-                                `Olá ${t.owner?.name || t.name}, referente à sua conta na plataforma MeuPedido360:`
-                              )}`}
+                              href={createWhatsAppUrl(
+                                t.phone_whatsapp || t.owner?.phone || '',
+                                `Olá ${t.owner?.name || t.name}! Aqui é da equipe MeuPedido360, referente à sua conta na plataforma:`
+                              )}
                               target="_blank"
                               rel="noreferrer"
                               className="p-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white border border-emerald-500/20 transition"

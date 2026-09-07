@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { formatPhone } from '@/lib/formatters';
+import { createWhatsAppUrl, formatDispatchMessage } from '@/lib/whatsapp';
 import { 
   ShoppingBag, 
   Clock, 
@@ -51,6 +52,7 @@ interface Order {
     bairro?: string;
     cidade?: string;
     complemento?: string;
+    troco_para?: string;
   };
   subtotal: number;
   delivery_fee: number;
@@ -200,18 +202,30 @@ export default function AdminDashboardKDS() {
 
   // Dispatch via WhatsApp to Motoboy
   const dispatchToMotoboy = (order: Order, driver: any) => {
-    const addressStr = `${order.delivery_address_json?.rua || ''}, ${order.delivery_address_json?.numero || ''}, ${order.delivery_address_json?.bairro || ''}, ${order.delivery_address_json?.cidade || ''}`;
+    const addr = order.delivery_address_json || {};
+    const addressStr = `${addr.rua || 'Rua'}, ${addr.numero || 'S/N'}, ${addr.bairro || ''}${addr.cidade ? `, ${addr.cidade}` : ''}`.trim();
     const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressStr)}`;
-    const phoneClean = driver.phone.replace(/\D/g, '');
 
-    const msg = `🛵 *NOVA ENTREGA - PEDIDO #${order.id.substring(0, 6)}*\n` +
-      `👤 *Cliente:* ${order.customer_name} (${order.customer_phone})\n` +
-      `📍 *Endereço:* ${addressStr}\n` +
-      `🗺️ *Google Maps:* ${mapsUrl}\n` +
-      `💳 *Pagamento:* ${order.payment_method.toUpperCase()}\n` +
-      `💰 *COBRAR NA ENTREGA:* R$ ${order.total.toFixed(2).replace('.', ',')}`;
+    const items = order.order_items?.map(i => ({
+      name: i.product_name,
+      quantity: i.quantity,
+    }));
 
-    window.open(`https://wa.me/55${phoneClean}?text=${encodeURIComponent(msg)}`, '_blank');
+    const msg = formatDispatchMessage({
+      orderId: order.id,
+      storeName: tenant?.name || subdomain,
+      customerName: order.customer_name,
+      customerPhone: formatPhone(order.customer_phone),
+      address: addressStr + (addr.complemento ? ` (${addr.complemento})` : ''),
+      mapsUrl,
+      items,
+      paymentMethod: order.payment_method,
+      paymentStatus: order.payment_status,
+      total: order.total,
+      changeFor: addr.troco_para,
+    });
+
+    window.open(createWhatsAppUrl(driver.phone, msg), '_blank');
   };
 
   // Simulate a test order for quick merchant demo
@@ -671,9 +685,10 @@ export default function AdminDashboardKDS() {
 
             {/* Direct WhatsApp Contact Button */}
             <a
-              href={`https://wa.me/55${selectedOrder.customer_phone.replace(/\D/g, '')}?text=${encodeURIComponent(
-                `Olá ${selectedOrder.customer_name}, sobre o seu pedido #${selectedOrder.id.substring(0, 6)} na ${tenant?.name || 'nossa loja'}:`
-              )}`}
+              href={createWhatsAppUrl(
+                selectedOrder.customer_phone,
+                `Olá ${selectedOrder.customer_name}! Aqui é da equipe ${tenant?.name || 'do restaurante'}, referente ao seu pedido #${selectedOrder.id.substring(0, 6).toUpperCase()}:`
+              )}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center justify-center w-full gap-2 px-4 py-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500 text-emerald-300 hover:text-white border border-emerald-500/30 font-bold text-xs transition shadow-sm"

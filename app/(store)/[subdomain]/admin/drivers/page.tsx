@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { formatPhone } from '@/lib/formatters';
+import { createWhatsAppUrl, formatSettlementMessage } from '@/lib/whatsapp';
 import { 
   Bike, 
   Plus, 
@@ -46,6 +47,7 @@ export default function AdminDriversPage() {
   const params = useParams();
   const subdomain = (params?.subdomain as string) || 'padaria';
 
+  const [tenant, setTenant] = useState<any>(null);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,11 +71,13 @@ export default function AdminDriversPage() {
       const resDrivers = await fetch(`/api/tenant/drivers?slug=${subdomain}`);
       const driversData = await resDrivers.json();
       if (driversData.drivers) setDrivers(driversData.drivers);
+      if (driversData.tenant) setTenant(driversData.tenant);
 
       // Load Orders for statistics
       const resOrders = await fetch(`/api/tenant/orders?slug=${subdomain}`);
       const ordersData = await resOrders.json();
       if (ordersData.orders) setOrders(ordersData.orders);
+      if (ordersData.tenant && !driversData.tenant) setTenant(ordersData.tenant);
 
     } catch (err) {
       console.error('Erro ao carregar dados dos entregadores:', err);
@@ -175,19 +179,16 @@ export default function AdminDriversPage() {
 
   const handleSendWhatsAppSettlement = () => {
     if (!activeDriver) return;
-    const phoneClean = activeDriver.phone.replace(/\D/g, '');
 
-    const msg = `🛵 *FECHAMENTO DE CAIXA - MOTOBOY* 🛵\n` +
-      `👤 *Entregador:* ${activeDriver.name}\n` +
-      `📅 *Data:* ${new Date().toLocaleDateString('pt-BR')}\n` +
-      `----------------------------------------\n` +
-      `📦 *Total de Entregas:* ${filteredSettlementOrders.length}\n` +
-      `💰 *Taxas de Entrega a Receber:* R$ ${totalDeliveryFees.toFixed(2).replace('.', ',')}\n` +
-      `💵 *Dinheiro Coletado a Devolver:* R$ ${totalMoneyCollected.toFixed(2).replace('.', ',')}\n` +
-      `----------------------------------------\n` +
-      `*MeuPedido360* - Gestão de Delivery`;
+    const msg = formatSettlementMessage({
+      driverName: activeDriver.name,
+      storeName: tenant?.name || subdomain,
+      deliveryCount: filteredSettlementOrders.length,
+      totalDeliveryFees: totalDeliveryFees,
+      totalMoneyCollected: totalMoneyCollected,
+    });
 
-    window.open(`https://wa.me/55${phoneClean}?text=${encodeURIComponent(msg)}`, '_blank');
+    window.open(createWhatsAppUrl(activeDriver.phone, msg), '_blank');
   };
 
   return (
@@ -335,7 +336,7 @@ export default function AdminDriversPage() {
 
                     <div className="flex items-center gap-2 self-end sm:self-center">
                       <a
-                        href={`https://wa.me/55${driver.phone.replace(/\D/g, '')}`}
+                        href={createWhatsAppUrl(driver.phone)}
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 text-xs font-semibold transition"

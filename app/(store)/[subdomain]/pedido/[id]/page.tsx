@@ -27,6 +27,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { formatPhone } from '@/lib/formatters';
+import { createWhatsAppUrl } from '@/lib/whatsapp';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -587,7 +588,10 @@ export default function OrderTrackingPage() {
 
             {order.drivers?.phone && (
               <a
-                href={`https://wa.me/55${order.drivers.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá ${order.drivers.name}! Sou o cliente do pedido #${order.id.substring(0, 6).toUpperCase()}`)}`}
+                href={createWhatsAppUrl(
+                  order.drivers.phone,
+                  `Olá ${order.drivers.name}! Sou o cliente do pedido #${order.id.substring(0, 6).toUpperCase()} na ${tenant?.name || 'loja'}.`
+                )}
                 target="_blank"
                 rel="noreferrer"
                 className="px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition"
@@ -661,7 +665,10 @@ export default function OrderTrackingPage() {
           {/* STORE WHATSAPP BUTTON */}
           {tenant?.phone_whatsapp && (
             <a
-              href={`https://wa.me/55${tenant.phone_whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá! Tenho uma dúvida sobre o pedido #${order.id.substring(0, 6).toUpperCase()} realizado em ${tenant.name}.`)}`}
+              href={createWhatsAppUrl(
+                tenant.phone_whatsapp,
+                `Olá! Tenho uma dúvida sobre o pedido #${order.id.substring(0, 6).toUpperCase()} realizado na loja ${tenant.name}.`
+              )}
               target="_blank"
               rel="noreferrer"
               className="w-full py-3 rounded-xl bg-slate-950 hover:bg-slate-850 text-slate-300 hover:text-white border border-slate-800 font-bold text-xs flex items-center justify-center gap-2 transition"
