@@ -261,9 +261,6 @@ export default function SuperAdminDashboard() {
               <h1 className="text-2xl font-black text-white tracking-tight">
                 MeuPedido<span className="bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">360</span> SuperAdmin
               </h1>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                Painel dos Fundadores
-              </span>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
               Gestão executiva de assinaturas, MRR, estabelecimentos e controle de licenças
