@@ -38,7 +38,8 @@ export async function GET(request: Request) {
       .from('orders')
       .select(`
         *,
-        order_items (*)
+        order_items (*),
+        drivers (*)
       `)
       .eq('tenant_id', tenant.id)
       .order('created_at', { ascending: false });
@@ -66,14 +67,14 @@ export async function GET(request: Request) {
 
 /**
  * PATCH /api/tenant/orders
- * Body: { order_id: string, status: string, payment_status?: string }
+ * Body: { order_id: string, status: string, payment_status?: string, driver_id?: string }
  * 
- * Updates order status in real-time.
+ * Updates order status and assigned driver in real-time.
  */
 export async function PATCH(request: Request) {
   try {
     const body = await request.json();
-    const { order_id, status, payment_status } = body;
+    const { order_id, status, payment_status, driver_id } = body;
 
     if (!order_id || !status) {
       return NextResponse.json({ error: 'order_id e status são obrigatórios' }, { status: 400 });
@@ -83,12 +84,19 @@ export async function PATCH(request: Request) {
     if (payment_status) {
       updateData.payment_status = payment_status;
     }
+    if (driver_id !== undefined) {
+      updateData.driver_id = driver_id || null;
+    }
 
     const { data, error } = await supabase
       .from('orders')
       .update(updateData)
       .eq('id', order_id)
-      .select()
+      .select(`
+        *,
+        order_items (*),
+        drivers (*)
+      `)
       .single();
 
     if (error) {

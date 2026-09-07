@@ -58,6 +58,7 @@ interface Order {
   payment_method: string;
   payment_status: string;
   created_at: string;
+  driver_id?: string | null;
   order_items: OrderItem[];
 }
 
@@ -68,6 +69,7 @@ export default function AdminDashboardKDS() {
 
   const [tenant, setTenant] = useState<any>(null);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [drivers, setDrivers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -106,7 +108,7 @@ export default function AdminDashboardKDS() {
     }
   };
 
-  // 1. Initial Load: Fetch Tenant and Orders
+  // 1. Initial Load: Fetch Tenant, Orders, and Drivers
   const fetchOrders = async () => {
     try {
       setLoading(true);
@@ -118,6 +120,13 @@ export default function AdminDashboardKDS() {
       }
       if (data.orders) {
         setOrders(data.orders);
+      }
+
+      // Fetch Drivers
+      const resDrivers = await fetch(`/api/tenant/drivers?slug=${encodeURIComponent(subdomain)}`);
+      const driversData = await resDrivers.json();
+      if (driversData.drivers) {
+        setDrivers(driversData.drivers);
       }
     } catch (err) {
       console.error('Erro ao buscar pedidos:', err);
@@ -162,23 +171,23 @@ export default function AdminDashboardKDS() {
     };
   }, [tenant?.id]);
 
-  // Update order status API call
-  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+  // Update order status API call with optional driver assignment
+  const updateOrderStatus = async (orderId: string, newStatus: string, driverId?: string) => {
     setUpdatingOrderId(orderId);
     try {
       const res = await fetch('/api/tenant/orders', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ order_id: orderId, status: newStatus }),
+        body: JSON.stringify({ order_id: orderId, status: newStatus, driver_id: driverId }),
       });
 
       const data = await res.json();
       if (res.ok && data.success) {
         setOrders(prev =>
-          prev.map(o => (o.id === orderId ? { ...o, status: newStatus as any } : o))
+          prev.map(o => (o.id === orderId ? { ...o, status: newStatus as any, driver_id: driverId || o.driver_id } : o))
         );
         if (selectedOrder?.id === orderId) {
-          setSelectedOrder(prev => (prev ? { ...prev, status: newStatus as any } : null));
+          setSelectedOrder(prev => (prev ? { ...prev, status: newStatus as any, driver_id: driverId || prev.driver_id } : null));
         }
       }
     } catch (err) {
@@ -186,6 +195,22 @@ export default function AdminDashboardKDS() {
     } finally {
       setUpdatingOrderId(null);
     }
+  };
+
+  // Dispatch via WhatsApp to Motoboy
+  const dispatchToMotoboy = (order: Order, driver: any) => {
+    const addressStr = `${order.delivery_address_json?.rua || ''}, ${order.delivery_address_json?.numero || ''}, ${order.delivery_address_json?.bairro || ''}, ${order.delivery_address_json?.cidade || ''}`;
+    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressStr)}`;
+    const phoneClean = driver.phone.replace(/\D/g, '');
+
+    const msg = `🛵 *NOVA ENTREGA - PEDIDO #${order.id.substring(0, 6)}*\n` +
+      `👤 *Cliente:* ${order.customer_name} (${order.customer_phone})\n` +
+      `📍 *Endereço:* ${addressStr}\n` +
+      `🗺️ *Google Maps:* ${mapsUrl}\n` +
+      `💳 *Pagamento:* ${order.payment_method.toUpperCase()}\n` +
+      `💰 *COBRAR NA ENTREGA:* R$ ${order.total.toFixed(2).replace('.', ',')}`;
+
+    window.open(`https://wa.me/55${phoneClean}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
   // Simulate a test order for quick merchant demo
@@ -702,6 +727,50 @@ export default function AdminDashboardKDS() {
                 <span>Total</span>
                 <span className="text-emerald-400 font-mono text-base">{formatCurrency(selectedOrder.total)}</span>
               </div>
+            </div>
+
+            {/* DRIVER ASSIGNMENT & WHATSAPP DISPATCH */}
+            <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800 space-y-3 text-xs">
+              <div className="font-semibold text-slate-400 flex items-center justify-between">
+                <span>🛵 Entregador / Motoboy Responsável</span>
+                {drivers.length === 0 && (
+                  <a href={`/${subdomain}/admin/drivers`} className="text-rose-400 font-bold hover:underline">
+                    + Cadastrar Motoboy
+                  </a>
+                )}
+              </div>
+
+              {drivers.length > 0 ? (
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <select
+                    value={selectedOrder.driver_id || ''}
+                    onChange={(e) => updateOrderStatus(selectedOrder.id, selectedOrder.status, e.target.value)}
+                    className="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white focus:outline-none focus:border-rose-500 font-medium"
+                  >
+                    <option value="">Selecione o Entregador...</option>
+                    {drivers.map(d => (
+                      <option key={d.id} value={d.id}>
+                        {d.name} ({d.phone}) - {d.status === 'available' ? 'Disponível' : 'Em Rota'}
+                      </option>
+                    ))}
+                  </select>
+
+                  {selectedOrder.driver_id && (
+                    <button
+                      onClick={() => {
+                        const drv = drivers.find(d => d.id === selectedOrder.driver_id);
+                        if (drv) dispatchToMotoboy(selectedOrder, drv);
+                      }}
+                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold flex items-center justify-center gap-1.5 transition shadow-sm"
+                    >
+                      <Phone className="w-3.5 h-3.5" />
+                      <span>Despachar no WhatsApp</span>
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <p className="text-slate-500">Nenhum motoboy cadastrado nesta loja.</p>
+              )}
             </div>
 
             {/* Order Status Advancement Control */}

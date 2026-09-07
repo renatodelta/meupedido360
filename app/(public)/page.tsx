@@ -139,14 +139,14 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* Card 6: WhatsApp Integrado */}
+          {/* Card 6: Gestão de Entregadores & Fechamento */}
           <div className="p-8 rounded-2xl bg-slate-900/40 border border-slate-800/60 backdrop-blur-md hover:border-rose-500/30 transition duration-300 space-y-4">
             <div className="w-12 h-12 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center">
               <Smartphone className="w-6 h-6" />
             </div>
-            <h3 className="text-xl font-semibold text-white">Módulo de Motoboy</h3>
+            <h3 className="text-xl font-semibold text-white">Gestão de Entregadores</h3>
             <p className="text-slate-400 text-sm leading-relaxed">
-              Painel exclusivo para entregadores da loja acompanharem rotas de entrega e atualizarem o status do pedido diretamente de seus celulares.
+              Cadastre seus motoboys, atribua entregas no Kanban em 1 clique, despache rotas via WhatsApp com link do GPS e faça o acerto de caixa diário sem complicação.
             </p>
           </div>
 
@@ -203,8 +203,8 @@ export default function LandingPage() {
               <li className="flex items-center gap-2"><Check className="w-4 h-4 text-rose-500" /> Subdomínio próprio + Cores customizadas</li>
               <li className="flex items-center gap-2"><Check className="w-4 h-4 text-rose-500" /> Produtos e categorias ilimitados</li>
               <li className="flex items-center gap-2"><Check className="w-4 h-4 text-rose-500" /> Painel de controle e cozinha completo</li>
-              <li className="flex items-center gap-2"><Check className="w-4 h-4 text-rose-500" /> Integração com múltiplos motoboys</li>
-              <li className="flex items-center gap-2"><Check className="w-4 h-4 text-rose-500" /> Integração de pagamentos automáticos</li>
+              <li className="flex items-center gap-2"><Check className="w-4 h-4 text-rose-500" /> Gestão de Entregadores + Fechamento de Caixa</li>
+              <li className="flex items-center gap-2"><Check className="w-4 h-4 text-rose-500" /> Despacho no WhatsApp com Google Maps</li>
             </ul>
 
             <a 

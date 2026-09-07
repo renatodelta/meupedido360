@@ -154,6 +154,12 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
               🍽️ Cardápio
             </a>
             <a 
+              href="/admin/drivers"
+              className="px-3 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500 text-emerald-300 hover:text-white border border-emerald-500/30 font-bold transition flex items-center gap-1.5 shadow-sm"
+            >
+              🛵 Entregadores
+            </a>
+            <a 
               href="/admin/onboarding"
               className="px-3 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-750 font-semibold transition flex items-center gap-1.5"
             >
