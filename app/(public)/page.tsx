@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Sparkles, Zap, Smartphone, Check, CreditCard, ChevronRight } from 'lucide-react';
+import { Shield, Sparkles, Zap, Smartphone, Check, CreditCard, ChevronRight, Store, UtensilsCrossed, Bike } from 'lucide-react';
 
 export default function LandingPage() {
   return (
@@ -151,6 +151,148 @@ export default function LandingPage() {
           </div>
 
         </div>
+      </section>
+
+      {/* HOW IT WORKS / COMO FUNCIONA SECTION */}
+      <section id="demo" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-t border-slate-900 space-y-16 scroll-mt-20">
+        <div className="text-center space-y-4">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+            <Sparkles className="w-3.5 h-3.5" />
+            Simples, Ágil e Sem Complicação
+          </div>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight">
+            Como funciona o MeuPedido360?
+          </h2>
+          <p className="text-slate-400 max-w-2xl mx-auto text-base sm:text-lg font-light leading-relaxed">
+            Do cadastro da sua loja ao primeiro pedido entregue pelo motoboy, veja como é fácil modernizar seu delivery em 4 passos:
+          </p>
+        </div>
+
+        {/* 4 STEPS GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative">
+          
+          {/* STEP 1 */}
+          <div className="relative p-6 rounded-3xl bg-slate-900/40 border border-slate-800/80 backdrop-blur-md hover:border-rose-500/40 transition duration-300 flex flex-col justify-between group space-y-4">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-3xl font-black bg-gradient-to-br from-rose-400 to-pink-600 bg-clip-text text-transparent">
+                  01
+                </span>
+                <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-400 flex items-center justify-center group-hover:scale-110 transition duration-300">
+                  <Store className="w-6 h-6" />
+                </div>
+              </div>
+              <h3 className="text-xl font-bold text-white group-hover:text-rose-400 transition">
+                Crie sua Loja em 60s
+              </h3>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                Escolha seu subdomínio exclusivo (ex: <span className="text-rose-400 font-mono text-xs">sualoja.meupedido360.com</span>), defina suas cores e envie sua logo. Tudo pronto na hora, sem mexer em servidores.
+              </p>
+            </div>
+            <div className="pt-3 border-t border-slate-800/60 flex items-center text-xs text-rose-400 font-semibold">
+              <span>✓ Subdomínio ativo no Edge</span>
+            </div>
+          </div>
+
+          {/* STEP 2 */}
+          <div className="relative p-6 rounded-3xl bg-slate-900/40 border border-slate-800/80 backdrop-blur-md hover:border-purple-500/40 transition duration-300 flex flex-col justify-between group space-y-4">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-3xl font-black bg-gradient-to-br from-purple-400 to-pink-600 bg-clip-text text-transparent">
+                  02
+                </span>
+                <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center group-hover:scale-110 transition duration-300">
+                  <UtensilsCrossed className="w-6 h-6" />
+                </div>
+              </div>
+              <h3 className="text-xl font-bold text-white group-hover:text-purple-400 transition">
+                Cadastre seu Cardápio
+              </h3>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                Organize categorias, insira fotos irresistíveis, preços, opcionais e adicionais. Seu cardápio digital fica pronto para divulgar no WhatsApp e no Instagram.
+              </p>
+            </div>
+            <div className="pt-3 border-t border-slate-800/60 flex items-center text-xs text-purple-400 font-semibold">
+              <span>✓ Cardápio responsivo e veloz</span>
+            </div>
+          </div>
+
+          {/* STEP 3 */}
+          <div className="relative p-6 rounded-3xl bg-slate-900/40 border border-slate-800/80 backdrop-blur-md hover:border-amber-500/40 transition duration-300 flex flex-col justify-between group space-y-4">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-3xl font-black bg-gradient-to-br from-amber-400 to-rose-500 bg-clip-text text-transparent">
+                  03
+                </span>
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center group-hover:scale-110 transition duration-300">
+                  <Zap className="w-6 h-6" />
+                </div>
+              </div>
+              <h3 className="text-xl font-bold text-white group-hover:text-amber-400 transition">
+                Receba Pedidos no KDS
+              </h3>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                Alerta sonoro imediato a cada pedido novo. Gerencie a cozinha em tempo real pelo quadro Kanban: aprove, prepare e avise quando estiver pronto.
+              </p>
+            </div>
+            <div className="pt-3 border-t border-slate-800/60 flex items-center text-xs text-amber-400 font-semibold">
+              <span>✓ WebSocket Realtime ao vivo</span>
+            </div>
+          </div>
+
+          {/* STEP 4 */}
+          <div className="relative p-6 rounded-3xl bg-slate-900/40 border border-slate-800/80 backdrop-blur-md hover:border-emerald-500/40 transition duration-300 flex flex-col justify-between group space-y-4">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-3xl font-black bg-gradient-to-br from-emerald-400 to-teal-500 bg-clip-text text-transparent">
+                  04
+                </span>
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center group-hover:scale-110 transition duration-300">
+                  <Bike className="w-6 h-6" />
+                </div>
+              </div>
+              <h3 className="text-xl font-bold text-white group-hover:text-emerald-400 transition">
+                Despache & Feche o Caixa
+              </h3>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                Atribua o motoboy em 1 clique e despache no WhatsApp com link do Google Maps. No fim do turno, faça o fechamento de taxas e dinheiro em segundos.
+              </p>
+            </div>
+            <div className="pt-3 border-t border-slate-800/60 flex items-center text-xs text-emerald-400 font-semibold">
+              <span>✓ Acerto com motoboy em 1 clique</span>
+            </div>
+          </div>
+
+        </div>
+
+        {/* INTERACTIVE CALLOUT BANNER */}
+        <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-br from-slate-900/90 via-slate-900/60 to-rose-950/30 border border-slate-800/80 backdrop-blur-xl flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="space-y-2 text-center md:text-left">
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-white">
+              Pronto para ver na prática no seu negócio?
+            </h3>
+            <p className="text-slate-400 text-sm sm:text-base max-w-xl">
+              Crie seu cardápio agora mesmo e teste gratuitamente por 7 dias. Sem compromisso e sem precisar cadastrar cartão.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-4 w-full md:w-auto justify-center">
+            <a
+              href="/signup?plan=trial"
+              className="px-8 py-4 text-sm font-bold text-white bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 rounded-xl transition duration-300 shadow-lg shadow-rose-500/20 whitespace-nowrap"
+            >
+              Começar Teste Grátis
+            </a>
+            <a
+              href="http://padaria.localhost:3000"
+              target="_blank"
+              rel="noreferrer"
+              className="px-6 py-4 text-sm font-semibold text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 rounded-xl border border-slate-800 transition whitespace-nowrap"
+            >
+              Ver Demonstração
+            </a>
+          </div>
+        </div>
+
       </section>
 
       {/* PRICING PLANS SECTION */}
