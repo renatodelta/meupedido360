@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   ShoppingBag, 
   Plus, 
@@ -17,7 +17,8 @@ import {
   ArrowRight, 
   Sparkles, 
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Navigation
 } from 'lucide-react';
 import { formatPhone } from '@/lib/formatters';
 
@@ -74,6 +75,106 @@ export default function StoreMenuClient({
   const [addressComplemento, setAddressComplemento] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'cartao_entrega' | 'pix_entrega' | 'dinheiro_entrega'>('pix_entrega');
   const [trocoPara, setTrocoPara] = useState('');
+
+  // Geolocation & Auto-address state
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationStatus, setLocationStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const numeroInputRef = useRef<HTMLInputElement>(null);
+
+  // Active order stored in local session for fast tracking
+  const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`meupedido_last_order_${subdomain}`);
+      if (saved) {
+        setActiveOrderId(saved);
+      }
+    }
+  }, [subdomain]);
+
+  // Reverse Geocoding handler using OpenStreetMap Nominatim (No external API keys required)
+  const handleGetLocation = () => {
+    if (typeof window === 'undefined' || !navigator.geolocation) {
+      setLocationStatus({
+        type: 'error',
+        message: 'Geolocalização não é suportada pelo seu navegador. Preencha manualmente.',
+      });
+      return;
+    }
+
+    setIsLocating(true);
+    setLocationStatus(null);
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`,
+            {
+              headers: {
+                'Accept-Language': 'pt-BR,pt;q=0.9',
+              },
+            }
+          );
+          const data = await res.json();
+          if (data && data.address) {
+            const addr = data.address;
+            const road = addr.road || addr.pedestrian || addr.street || addr.residential || addr.suburb || '';
+            const neighbourhood = addr.suburb || addr.neighbourhood || addr.city_district || addr.quarter || '';
+
+            if (road) setAddressRua(road);
+            if (neighbourhood) setAddressBairro(neighbourhood);
+
+            setLocationStatus({
+              type: 'success',
+              message: 'Localização identificada! Digite agora o número da residência e complemento.',
+            });
+
+            // Focus directly on the number field so user only types house number and complement
+            setTimeout(() => {
+              numeroInputRef.current?.focus();
+            }, 250);
+          } else {
+            setLocationStatus({
+              type: 'error',
+              message: 'Não foi possível identificar o nome da via automaticamente. Digite abaixo.',
+            });
+          }
+        } catch (err) {
+          console.error('Erro ao geocodificar:', err);
+          setLocationStatus({
+            type: 'error',
+            message: 'Falha ao buscar endereço pelo GPS. Você pode digitar manualmente abaixo.',
+          });
+        } finally {
+          setIsLocating(false);
+        }
+      },
+      (err) => {
+        setIsLocating(false);
+        let msg = 'Não foi possível obter sua localização. Digite manualmente abaixo.';
+        if (err.code === err.PERMISSION_DENIED) {
+          msg = 'Permissão de GPS não concedida. Preencha o endereço manualmente abaixo.';
+        } else if (err.code === err.POSITION_UNAVAILABLE) {
+          msg = 'Sinal de GPS indisponível no momento. Preencha o endereço manualmente.';
+        } else if (err.code === err.TIMEOUT) {
+          msg = 'Tempo limite de GPS esgotado. Preencha o endereço manualmente.';
+        }
+        setLocationStatus({
+          type: 'error',
+          message: msg,
+        });
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000,
+      }
+    );
+  };
 
   // Submission State
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -184,10 +285,15 @@ export default function StoreMenuClient({
       const data = await res.json();
 
       if (res.ok && data.success) {
+        const orderId = data.order?.id || 'PEDIDO';
         setOrderSuccess({
-          id: data.order?.id || 'PEDIDO',
+          id: orderId,
           total: totalOrder,
         });
+        if (typeof window !== 'undefined' && data.order?.id) {
+          localStorage.setItem(`meupedido_last_order_${subdomain}`, data.order.id);
+          setActiveOrderId(data.order.id);
+        }
         setCart([]); // Clear cart
       } else {
         setFormError(data.error || 'Erro ao enviar pedido. Tente novamente.');
@@ -202,6 +308,37 @@ export default function StoreMenuClient({
 
   return (
     <div className="space-y-8">
+
+      {/* ACTIVE ORDER BANNER (Real-time Tracker shortcut) */}
+      {activeOrderId && (
+        <div className="bg-gradient-to-r from-emerald-950/80 via-slate-900 to-slate-900 border border-emerald-500/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-200 shadow-2xl animate-in fade-in duration-300">
+          <div className="flex items-center gap-3">
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+            </span>
+            <div>
+              <p className="font-extrabold text-white text-sm flex items-center gap-1.5">
+                <span>Pedido #{activeOrderId.substring(0, 6).toUpperCase()} em andamento!</span>
+                <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold">AO VIVO</span>
+              </p>
+              <p className="text-slate-400 text-xs">
+                Acompanhe o preparo e a rota de entrega pelo Kanban em tempo real.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <a
+              href={`/pedido/${activeOrderId}`}
+              className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold text-xs shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-1.5 transition transform hover:scale-105"
+            >
+              <span>Acompanhar Pedido</span>
+              <ChevronRight className="w-4 h-4" />
+            </a>
+          </div>
+        </div>
+      )}
 
       {/* DEMO NOTICE BANNER (shown only when viewing default mockup items) */}
       {!isCustomStore && (
@@ -506,10 +643,49 @@ export default function StoreMenuClient({
 
               {/* DELIVERY ADDRESS */}
               <div className="space-y-3 pt-2 border-t border-slate-800/80">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-rose-400" />
-                  <span>Endereço para Entrega</span>
-                </h4>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-rose-400" />
+                    <span>Endereço para Entrega</span>
+                  </h4>
+
+                  {/* OPTIONAL GEOLOCATION BUTTON */}
+                  <button
+                    type="button"
+                    onClick={handleGetLocation}
+                    disabled={isLocating}
+                    className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 border border-rose-500/30 text-[11px] font-bold transition disabled:opacity-50"
+                  >
+                    {isLocating ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-400" />
+                        <span>Buscando GPS...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Navigation className="w-3.5 h-3.5" />
+                        <span>📍 Usar minha localização atual</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {locationStatus && (
+                  <div
+                    className={`p-2.5 rounded-xl text-xs flex items-center gap-2 ${
+                      locationStatus.type === 'success'
+                        ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-300'
+                        : 'bg-amber-500/15 border border-amber-500/30 text-amber-300'
+                    }`}
+                  >
+                    {locationStatus.type === 'success' ? (
+                      <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4 shrink-0 text-amber-400" />
+                    )}
+                    <span>{locationStatus.message}</span>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-3 gap-3">
                   <div className="col-span-2">
@@ -527,12 +703,13 @@ export default function StoreMenuClient({
                   <div>
                     <label className="block text-xs font-medium text-slate-300 mb-1">Número *</label>
                     <input
+                      ref={numeroInputRef}
                       type="text"
                       required
                       placeholder="Ex: 1500"
                       value={addressNumero}
                       onChange={e => setAddressNumero(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-600 text-xs focus:outline-none focus:border-rose-500"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-600 text-xs focus:outline-none focus:border-rose-500 font-semibold"
                     />
                   </div>
                 </div>
@@ -697,13 +874,23 @@ export default function StoreMenuClient({
               </div>
             </div>
 
-            <button
-              onClick={() => setOrderSuccess(null)}
-              className="w-full py-3.5 rounded-xl text-xs font-bold text-white shadow-lg transition"
-              style={{ backgroundColor: 'var(--primary-color)' }}
-            >
-              Fazer Outro Pedido
-            </button>
+            {/* ACTIONS */}
+            <div className="space-y-2.5 pt-2">
+              <a
+                href={`/pedido/${orderSuccess.id}`}
+                className="w-full py-3.5 rounded-2xl text-sm font-extrabold text-white shadow-xl hover:scale-[1.02] active:scale-[0.98] transition duration-200 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 shadow-emerald-500/20"
+              >
+                <span>🚀 Acompanhar Pedido ao Vivo</span>
+                <ChevronRight className="w-4 h-4" />
+              </a>
+
+              <button
+                onClick={() => setOrderSuccess(null)}
+                className="w-full py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition"
+              >
+                Voltar ao Cardápio
+              </button>
+            </div>
           </div>
         </div>
       )}

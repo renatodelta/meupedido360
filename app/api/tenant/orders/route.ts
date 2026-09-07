@@ -16,13 +16,43 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const slug = searchParams.get('slug') || '';
   const status = searchParams.get('status');
-
-  if (!slug) {
-    return NextResponse.json({ error: 'Parâmetro slug é obrigatório' }, { status: 400 });
-  }
+  const orderId = searchParams.get('order_id');
 
   try {
-    // 1. Resolve Tenant ID
+    // 1. If order_id is provided, return that specific order directly
+    if (orderId) {
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (*),
+          drivers (*)
+        `)
+        .eq('id', orderId)
+        .single();
+
+      if (orderError || !order) {
+        return NextResponse.json({ error: 'Pedido não encontrado' }, { status: 404 });
+      }
+
+      // Fetch tenant details for the order
+      const { data: tenant } = await supabase
+        .from('tenants')
+        .select('id, name, slug, primary_color, phone_whatsapp, logo_url')
+        .eq('id', order.tenant_id)
+        .single();
+
+      return NextResponse.json({
+        order,
+        tenant: tenant || null,
+      });
+    }
+
+    if (!slug) {
+      return NextResponse.json({ error: 'Parâmetro slug é obrigatório' }, { status: 400 });
+    }
+
+    // 2. Resolve Tenant ID
     const { data: tenant, error: tenantError } = await supabase
       .from('tenants')
       .select('id, name, slug, primary_color')

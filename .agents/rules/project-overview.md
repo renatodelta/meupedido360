@@ -60,15 +60,30 @@
   - Barra de sacola flutuante com contagem de itens e valor total em tempo real.
 - **Gaveta de Checkout Completa**:
   - Revisão e alteração de itens na sacola.
-  - Dados do cliente (Nome e WhatsApp com máscara).
-  - Endereço de entrega completo (Rua, Número, Bairro e Complemento).
+  - Dados do cliente (Nome e WhatsApp com máscara automática).
+  - **Preenchimento Inteligente de Endereço**:
+    - **Botão Opcional "📍 Usar minha localização atual"**: utiliza o GPS do dispositivo e a API aberta do OpenStreetMap Nominatim para preencher automaticamente a Rua e o Bairro, focando o cursor diretamente no campo de Número para que o cliente digite apenas o número da casa e complemento.
+    - **Preenchimento Manual Alternativo**: 100% editável e disponível a qualquer momento se o usuário preferir preencher tudo à mão.
   - **Formas de Pagamento na Entrega**:
     - ⚡ *PIX na Entrega*
     - 💳 *Cartão na Maquininha* (Crédito/Débito)
     - 💵 *Dinheiro* (com campo de troco)
-  - Disparo de pedido em tempo real via `POST /api/tenant/orders` e tela de sucesso.
+  - Disparo de pedido em tempo real via `POST /api/tenant/orders`, salvamento do pedido na sessão/localStorage e botão direto *"🚀 Acompanhar Pedido ao Vivo"*.
 
-### 4. Painel KDS de Cozinha & Pedidos ao Vivo (`app/(store)/[subdomain]/admin/page.tsx`)
+### 4. Acompanhamento em Tempo Real do Consumidor (Kanban do Cliente - `app/(store)/[subdomain]/pedido/[id]/page.tsx`)
+- **Linha do Tempo & Quadro Kanban Interativo em 5 Etapas**:
+  - `1. Recebido (Pendente)` ➔ `2. Em Preparo` ➔ `3. Prontos p/ Saída` ➔ `4. Em Rota de Entrega` ➔ `5. Entregue`.
+  - Destaque visual da etapa atual com bordas brilhantes, badge pulsante e barra de progresso suave.
+- **Sincronização ao Vivo via Supabase Realtime**:
+  - Conexão WebSocket que escuta eventos `UPDATE` na tabela `orders` para o ID do pedido.
+  - Atualização instantânea na tela do cliente conforme a cozinha move o pedido no `/admin`.
+  - **Alerta Sonoro (Chime)**: sintetizado via Web Audio API disparado quando a etapa avança.
+- **Card do Entregador (Motoboy)**:
+  - Exibe nome do motoboy, veículo, placa e botão direto de conversa no WhatsApp quando o pedido é despachado em rota.
+- **Resumo Detalhado & Suporte**:
+  - Exibição de itens, preços, subtotal, taxa de entrega, endereço de entrega e botão direto de suporte via WhatsApp com o restaurante.
+
+### 5. Painel KDS de Cozinha & Pedidos ao Vivo (`app/(store)/[subdomain]/admin/page.tsx`)
 - **Quadro Kanban Operacional em 4 Colunas**:
   - `1. Novos (Pendentes)` ➔ `2. Em Preparo` ➔ `3. Prontos p/ Saída` ➔ `4. Em Rota de Entrega`.
 - **Alerta Sonoro (Chime)**: Sintetizador de áudio em Web Audio API disparado imediatamente ao receber novo pedido via Supabase Realtime.
