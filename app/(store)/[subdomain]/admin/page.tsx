@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
+import { formatPhone } from '@/lib/formatters';
 import { 
   ShoppingBag, 
   Clock, 
@@ -436,7 +437,7 @@ export default function AdminDashboardKDS() {
 
                   <div>
                     <h3 className="font-bold text-white text-sm">{order.customer_name}</h3>
-                    <p className="text-xs text-slate-400">{order.customer_phone}</p>
+                    <p className="text-xs text-slate-400">{formatPhone(order.customer_phone)}</p>
                   </div>
 
                   <div className="text-xs text-slate-300 bg-slate-950/60 p-2.5 rounded-xl border border-slate-850 space-y-1">
@@ -507,7 +508,7 @@ export default function AdminDashboardKDS() {
 
                   <div>
                     <h3 className="font-bold text-white text-sm">{order.customer_name}</h3>
-                    <p className="text-xs text-slate-400">{order.customer_phone}</p>
+                    <p className="text-xs text-slate-400">{formatPhone(order.customer_phone)}</p>
                   </div>
 
                   <div className="text-xs text-slate-300 bg-slate-950/60 p-2.5 rounded-xl border border-slate-850 space-y-1">
@@ -571,7 +572,7 @@ export default function AdminDashboardKDS() {
 
                   <div>
                     <h3 className="font-bold text-white text-sm">{order.customer_name}</h3>
-                    <p className="text-xs text-slate-400">{order.customer_phone}</p>
+                    <p className="text-xs text-slate-400">{formatPhone(order.customer_phone)}</p>
                   </div>
 
                   <button
@@ -626,7 +627,7 @@ export default function AdminDashboardKDS() {
 
                   <div>
                     <h3 className="font-bold text-white text-sm">{order.customer_name}</h3>
-                    <p className="text-xs text-slate-400">{order.customer_phone}</p>
+                    <p className="text-xs text-slate-400">{formatPhone(order.customer_phone)}</p>
                   </div>
 
                   <button
@@ -678,7 +679,7 @@ export default function AdminDashboardKDS() {
               className="inline-flex items-center justify-center w-full gap-2 px-4 py-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500 text-emerald-300 hover:text-white border border-emerald-500/30 font-bold text-xs transition shadow-sm"
             >
               <Phone className="w-4 h-4" />
-              <span>Falar com o Cliente no WhatsApp ({selectedOrder.customer_phone})</span>
+              <span>Falar com o Cliente no WhatsApp ({formatPhone(selectedOrder.customer_phone)})</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
 
@@ -750,7 +751,7 @@ export default function AdminDashboardKDS() {
                     <option value="">Selecione o Entregador...</option>
                     {drivers.map(d => (
                       <option key={d.id} value={d.id}>
-                        {d.name} ({d.phone}) - {d.status === 'available' ? 'Disponível' : 'Em Rota'}
+                        {d.name} ({formatPhone(d.phone)}) - {d.status === 'available' ? 'Disponível' : 'Em Rota'}
                       </option>
                     ))}
                   </select>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { formatPhone } from '@/lib/formatters';
 import { 
   Zap, 
   ShieldCheck, 
@@ -480,7 +481,7 @@ export default function SuperAdminDashboard() {
                           {(t.phone_whatsapp || t.owner?.phone) && (
                             <p className="text-slate-400 text-[11px] flex items-center gap-1">
                               <Phone className="w-3 h-3 text-emerald-400" />
-                              <span>{t.phone_whatsapp || t.owner?.phone}</span>
+                              <span>{formatPhone(t.phone_whatsapp || t.owner?.phone)}</span>
                             </p>
                           )}
                         </div>

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { formatPhone } from '@/lib/formatters';
 import { 
   Bike, 
   Plus, 
@@ -325,7 +326,7 @@ export default function AdminDriversPage() {
                           </button>
                         </div>
                         <div className="flex items-center gap-4 text-xs text-slate-400 mt-1">
-                          <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5" /> {driver.phone}</span>
+                          <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5" /> {formatPhone(driver.phone)}</span>
                           <span>•</span>
                           <span>{driverOrdersCount} entregas registradas</span>
                         </div>
@@ -392,10 +393,11 @@ export default function AdminDriversPage() {
                   Telefone / WhatsApp
                 </label>
                 <input
-                  type="text"
-                  placeholder="Ex: (11) 99999-8888"
+                  type="tel"
+                  placeholder="(12) 99153-0244"
+                  maxLength={15}
                   value={newDriverPhone}
-                  onChange={e => setNewDriverPhone(e.target.value)}
+                  onChange={e => setNewDriverPhone(formatPhone(e.target.value))}
                   className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-600 focus:outline-none focus:border-rose-500 transition"
                   required
                 />
@@ -451,7 +453,7 @@ export default function AdminDriversPage() {
               >
                 <option value="all">Todos os Entregadores ({completedOrders.length} entregas)</option>
                 {drivers.map(d => (
-                  <option key={d.id} value={d.id}>{d.name} ({d.phone})</option>
+                  <option key={d.id} value={d.id}>{d.name} ({formatPhone(d.phone)})</option>
                 ))}
               </select>
             </div>

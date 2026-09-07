@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { formatPhone } from '@/lib/formatters';
 import { 
   Zap, 
   CheckCircle2, 
@@ -368,9 +369,10 @@ function SignupFormContent() {
                     <Phone className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                     <input
                       type="tel"
-                      placeholder="(11) 99999-9999"
+                      placeholder="(12) 99153-0244"
+                      maxLength={15}
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
+                      onChange={(e) => setPhone(formatPhone(e.target.value))}
                       className="w-full pl-10 pr-4 py-2.5 bg-slate-950/60 border border-slate-800 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition duration-150"
                     />
                   </div>
