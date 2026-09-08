@@ -56,41 +56,78 @@ export async function POST(request: Request) {
       });
     }
 
-    // 4. Create Mercado Pago Preference
-    const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
+    // 4. Create Mercado Pago Preapproval Subscription (Automatic Monthly Recurring Debit)
+    const mpResponse = await fetch('https://api.mercadopago.com/preapproval', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${mpAccessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        items: [
-          {
-            title: 'MeuPedido360 - Plano Pro (Mensal)',
-            description: `Assinatura mensal para o restaurante ${tenant.name} (${tenant.slug}.meupedido360.com)`,
-            quantity: 1,
-            currency_id: 'BRL',
-            unit_price: 59.90,
-          },
-        ],
-        external_reference: tenant.id,
-        back_urls: {
-          success: `${storeDashboardUrl}?payment=approved`,
-          failure: `${storeDashboardUrl}?payment=rejected`,
-          pending: `${storeDashboardUrl}?payment=pending`,
+        reason: 'MeuPedido360 - Plano Pro (Mensal)',
+        auto_recurring: {
+          frequency: 1,
+          frequency_type: 'months',
+          transaction_amount: 59.90,
+          currency_id: 'BRL',
         },
-        auto_return: 'approved',
-        notification_url: `${appUrl}/api/webhooks/mercadopago`,
+        back_url: `${storeDashboardUrl}?payment=approved`,
+        external_reference: tenant.id,
+        status: 'pending',
       }),
     });
 
     if (!mpResponse.ok) {
       const errText = await mpResponse.text();
-      console.error('[Subscription] Mercado Pago API Error:', errText);
+      console.warn('[Subscription] Preapproval API failed, falling back to preference checkout:', errText);
+      
+      const prefResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${mpAccessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          items: [
+            {
+              title: 'MeuPedido360 - Plano Pro (Mensal)',
+              description: `Assinatura mensal para o restaurante ${tenant.name} (${tenant.slug}.meupedido360.com)`,
+              quantity: 1,
+              currency_id: 'BRL',
+              unit_price: 59.90,
+            },
+          ],
+          external_reference: tenant.id,
+          back_urls: {
+            success: `${storeDashboardUrl}?payment=approved`,
+            failure: `${storeDashboardUrl}?payment=rejected`,
+            pending: `${storeDashboardUrl}?payment=pending`,
+          },
+          auto_return: 'approved',
+          notification_url: `${appUrl}/api/webhooks/mercadopago`,
+        }),
+      });
+
+      if (!prefResponse.ok) {
+        const prefErrText = await prefResponse.text();
+        return NextResponse.json({
+          error: 'Erro ao comunicar com a API do Mercado Pago. Verifique as credenciais.',
+          details: prefErrText,
+        }, { status: 502 });
+      }
+
+      const prefData = await prefResponse.json();
+      const isTestToken = mpAccessToken.startsWith('TEST-');
+      const fallbackCheckoutUrl = isTestToken 
+        ? (prefData.sandbox_init_point || prefData.init_point) 
+        : (prefData.init_point || prefData.sandbox_init_point);
+
       return NextResponse.json({
-        error: 'Erro ao comunicar com a API do Mercado Pago. Verifique as credenciais.',
-        details: errText,
-      }, { status: 502 });
+        success: true,
+        checkout_url: fallbackCheckoutUrl,
+        preference_id: prefData.id,
+        tenant,
+      });
     }
 
     const mpData = await mpResponse.json();
@@ -101,8 +138,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
+      is_subscription: true,
       checkout_url: checkoutUrl,
-      preference_id: mpData.id,
+      preapproval_id: mpData.id,
       tenant,
     });
 

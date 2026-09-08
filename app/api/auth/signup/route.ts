@@ -177,45 +177,81 @@ export async function POST(request: Request) {
     }
 
     try {
-      const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
+      const mpResponse = await fetch('https://api.mercadopago.com/preapproval', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${mpAccessToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          items: [
-            {
-              title: 'MeuPedido360 - Plano Pro (Mensal)',
-              description: `Assinatura mensal para o restaurante ${store_name} (${slug}.meupedido360.com)`,
-              quantity: 1,
-              currency_id: 'BRL',
-              unit_price: 59.90,
-            },
-          ],
-          payer: {
-            name,
-            email,
+          reason: 'MeuPedido360 - Plano Pro (Mensal)',
+          auto_recurring: {
+            frequency: 1,
+            frequency_type: 'months',
+            transaction_amount: 59.90,
+            currency_id: 'BRL',
           },
+          back_url: `${storeDashboardUrl}?payment=approved`,
+          payer_email: email,
           external_reference: tenant.id,
-          back_urls: {
-            success: `${storeDashboardUrl}?payment=approved`,
-            failure: `${appUrl}/signup?payment=rejected`,
-            pending: `${storeDashboardUrl}?payment=pending`,
-          },
-          auto_return: 'approved',
-          notification_url: `${appUrl}/api/webhooks/mercadopago`,
+          status: 'pending',
         }),
       });
 
       if (!mpResponse.ok) {
         const mpErrText = await mpResponse.text();
-        console.error('[Signup] Mercado Pago API error:', mpErrText);
+        console.warn('[Signup] Preapproval API failed, falling back to preference checkout:', mpErrText);
+        
+        // Fallback to Checkout Preferences if preapproval fails
+        const prefResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${mpAccessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            items: [
+              {
+                title: 'MeuPedido360 - Plano Pro (Mensal)',
+                description: `Assinatura mensal para o restaurante ${store_name} (${slug}.meupedido360.com)`,
+                quantity: 1,
+                currency_id: 'BRL',
+                unit_price: 59.90,
+              },
+            ],
+            payer: { name, email },
+            external_reference: tenant.id,
+            back_urls: {
+              success: `${storeDashboardUrl}?payment=approved`,
+              failure: `${appUrl}/signup?payment=rejected`,
+              pending: `${storeDashboardUrl}?payment=pending`,
+            },
+            auto_return: 'approved',
+            notification_url: `${appUrl}/api/webhooks/mercadopago`,
+          }),
+        });
+
+        if (!prefResponse.ok) {
+          return NextResponse.json({
+            success: true,
+            plan: 'pro',
+            is_demo: true,
+            redirect_url: `${storeDashboardUrl}?mp_simulated=true`,
+            tenant,
+          });
+        }
+
+        const prefData = await prefResponse.json();
+        const isTestToken = mpAccessToken.startsWith('TEST-');
+        const fallbackCheckoutUrl = isTestToken 
+          ? (prefData.sandbox_init_point || prefData.init_point) 
+          : (prefData.init_point || prefData.sandbox_init_point);
+
         return NextResponse.json({
           success: true,
           plan: 'pro',
-          is_demo: true,
-          redirect_url: `${storeDashboardUrl}?mp_simulated=true`,
+          redirect_url: fallbackCheckoutUrl,
+          preference_id: prefData.id,
           tenant,
         });
       }
@@ -229,8 +265,9 @@ export async function POST(request: Request) {
       return NextResponse.json({
         success: true,
         plan: 'pro',
+        is_subscription: true,
         redirect_url: checkoutUrl,
-        preference_id: mpData.id,
+        preapproval_id: mpData.id,
         tenant,
       });
 
