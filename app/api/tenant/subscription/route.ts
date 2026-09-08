@@ -94,7 +94,10 @@ export async function POST(request: Request) {
     }
 
     const mpData = await mpResponse.json();
-    const checkoutUrl = mpData.init_point || mpData.sandbox_init_point;
+    const isTestToken = mpAccessToken.startsWith('TEST-');
+    const checkoutUrl = isTestToken 
+      ? (mpData.sandbox_init_point || mpData.init_point) 
+      : (mpData.init_point || mpData.sandbox_init_point);
 
     return NextResponse.json({
       success: true,
