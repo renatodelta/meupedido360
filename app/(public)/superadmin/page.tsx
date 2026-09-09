@@ -307,7 +307,7 @@ export default function SuperAdminDashboard() {
           <div className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent tracking-tight">
             {formatCurrency(metrics.mrr)}
           </div>
-          <p className="text-[11px] text-slate-500">Previsão mensal baseada nos R$ 59,90/mês</p>
+          <p className="text-[11px] text-slate-500">Previsão mensal baseada nos R$ 69,90/mês</p>
         </div>
 
         {/* LOJAS ATIVAS */}

@@ -338,7 +338,7 @@ export default function LandingPage() {
               <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20">Acesso Premium Completo</span>
               <h3 className="text-2xl font-bold text-white">Mensal Pro</h3>
               <p className="text-slate-400 text-sm">Todo o poder da nossa plataforma de delivery para alavancar suas vendas recorrentes.</p>
-              <div className="text-4xl font-black text-white">R$ 59,90<span className="text-sm font-normal text-slate-400">/mês</span></div>
+              <div className="text-4xl font-black text-white">R$ 69,90<span className="text-sm font-normal text-slate-400">/mês</span></div>
             </div>
             
             <ul className="space-y-3 text-sm text-slate-300">

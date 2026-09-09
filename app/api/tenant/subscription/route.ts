@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const mpAccessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN || '';
+const kiwifyCheckoutUrl = process.env.NEXT_PUBLIC_KIWIFY_CHECKOUT_URL || process.env.KIWIFY_CHECKOUT_URL || '';
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://meupedido360.com';
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -12,8 +13,8 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
  * POST /api/tenant/subscription
  * Body: { slug: string }
  * 
- * Generates a Mercado Pago Checkout preference for an existing tenant to subscribe or renew
- * their monthly Pro plan (R$ 59,90).
+ * Generates a Checkout link (Kiwify or Mercado Pago) for an existing tenant to subscribe or renew
+ * their monthly Pro plan.
  */
 export async function POST(request: Request) {
   try {
@@ -27,7 +28,7 @@ export async function POST(request: Request) {
     // 1. Fetch Tenant from Supabase
     const { data: tenant, error: tenantError } = await supabase
       .from('tenants')
-      .select('id, name, slug, plan_status')
+      .select('id, name, slug, plan_status, phone_whatsapp')
       .eq('slug', slug)
       .single();
 
@@ -41,6 +42,21 @@ export async function POST(request: Request) {
     const storeDashboardUrl = isLocalhost
       ? `http://${slug}.lvh.me:3000/admin`
       : `https://${slug}.meupedido360.com/admin`;
+
+    // 3. Priority: Kiwify Checkout
+    if (kiwifyCheckoutUrl) {
+      const checkoutWithParams = new URL(kiwifyCheckoutUrl);
+      if (tenant.phone_whatsapp) checkoutWithParams.searchParams.set('phone', tenant.phone_whatsapp);
+      checkoutWithParams.searchParams.set('custom_tenant_id', tenant.id);
+      checkoutWithParams.searchParams.set('custom_slug', tenant.slug);
+      checkoutWithParams.searchParams.set('src', `slug:${tenant.slug}`);
+
+      return NextResponse.json({
+        success: true,
+        checkout_url: checkoutWithParams.toString(),
+        tenant,
+      });
+    }
 
     // 3. Check for Dummy / Unconfigured Token
     const isDummyToken = !mpAccessToken || mpAccessToken.includes('0000000000000000') || mpAccessToken.includes('exemplo');
@@ -68,7 +84,7 @@ export async function POST(request: Request) {
         auto_recurring: {
           frequency: 1,
           frequency_type: 'months',
-          transaction_amount: 59.90,
+          transaction_amount: 69.90,
           currency_id: 'BRL',
         },
         back_url: `${storeDashboardUrl}?payment=approved`,
@@ -94,7 +110,7 @@ export async function POST(request: Request) {
               description: `Assinatura mensal para o restaurante ${tenant.name} (${tenant.slug}.meupedido360.com)`,
               quantity: 1,
               currency_id: 'BRL',
-              unit_price: 59.90,
+              unit_price: 69.90,
             },
           ],
           external_reference: tenant.id,

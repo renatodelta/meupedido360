@@ -55,8 +55,8 @@ export async function GET() {
     const trialTenants = enrichedTenants.filter(t => t.plan_status === 'trial').length;
     const suspendedTenants = enrichedTenants.filter(t => t.plan_status === 'suspended').length;
     
-    // MRR (Monthly Recurring Revenue) based on R$ 59.90 / active store
-    const mrr = activeTenants * 59.90;
+    // MRR (Monthly Recurring Revenue) based on R$ 69.90 / active store
+    const mrr = activeTenants * 69.90;
 
     return NextResponse.json({
       metrics: {

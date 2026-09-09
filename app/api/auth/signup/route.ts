@@ -6,6 +6,8 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const mpAccessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN || '';
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
+const kiwifyCheckoutUrl = process.env.NEXT_PUBLIC_KIWIFY_CHECKOUT_URL || process.env.KIWIFY_CHECKOUT_URL || '';
+
 // Service role client bypasses RLS for administrative onboarding
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -159,7 +161,25 @@ export async function POST(request: Request) {
       });
     }
 
-    // PLAN: PRO (Mercado Pago Checkout)
+    // PLAN: PRO (Kiwify or Mercado Pago Checkout)
+    if (kiwifyCheckoutUrl) {
+      console.log(`[Signup] Pro plan selected for ${slug}. Redirecting to Kiwify checkout...`);
+      const checkoutWithParams = new URL(kiwifyCheckoutUrl);
+      if (email) checkoutWithParams.searchParams.set('email', email);
+      if (name) checkoutWithParams.searchParams.set('name', name);
+      if (phone) checkoutWithParams.searchParams.set('phone', phone);
+      checkoutWithParams.searchParams.set('custom_tenant_id', tenant.id);
+      checkoutWithParams.searchParams.set('custom_slug', tenant.slug);
+      checkoutWithParams.searchParams.set('src', `slug:${tenant.slug}`);
+
+      return NextResponse.json({
+        success: true,
+        plan: 'pro',
+        redirect_url: checkoutWithParams.toString(),
+        tenant,
+      });
+    }
+
     console.log(`[Signup] Pro plan selected for ${slug}. Generating Mercado Pago preference...`);
 
     const isDummyToken = !mpAccessToken || mpAccessToken.includes('0000000000000000') || mpAccessToken.includes('exemplo');
@@ -188,7 +208,7 @@ export async function POST(request: Request) {
           auto_recurring: {
             frequency: 1,
             frequency_type: 'months',
-            transaction_amount: 59.90,
+            transaction_amount: 69.90,
             currency_id: 'BRL',
           },
           back_url: `${storeDashboardUrl}?payment=approved`,
@@ -216,7 +236,7 @@ export async function POST(request: Request) {
                 description: `Assinatura mensal para o restaurante ${store_name} (${slug}.meupedido360.com)`,
                 quantity: 1,
                 currency_id: 'BRL',
-                unit_price: 59.90,
+                unit_price: 69.90,
               },
             ],
             payer: { name, email },

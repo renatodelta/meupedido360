@@ -207,7 +207,7 @@ function SignupFormContent() {
                 <div className="text-xs font-semibold text-slate-400 mb-1">Plano Completo</div>
                 <div className="text-base font-bold text-white">Mensal Pro</div>
                 <div className="text-xl font-black text-rose-400 mt-2">
-                  R$ 59,90<span className="text-xs font-normal text-slate-400">/mês</span>
+                  R$ 69,90<span className="text-xs font-normal text-slate-400">/mês</span>
                 </div>
                 <div className="text-[11px] text-slate-400 mt-1">Pix ou Cartão</div>
               </button>
@@ -437,7 +437,7 @@ function SignupFormContent() {
                 ) : plan === 'pro' ? (
                   <>
                     <CreditCard className="w-5 h-5" />
-                    <span>Ir para Pagamento Seguro (R$ 59,90/mês)</span>
+                    <span>Ir para Pagamento Seguro (R$ 69,90/mês)</span>
                     <ArrowRight className="w-4 h-4" />
                   </>
                 ) : (
