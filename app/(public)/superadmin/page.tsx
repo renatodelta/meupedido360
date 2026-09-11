@@ -253,14 +253,18 @@ export default function SuperAdminDashboard() {
       
       {/* HEADER SECTION */}
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-900/80 border border-slate-800 rounded-3xl p-6 backdrop-blur-xl shadow-2xl">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-xl shadow-purple-500/20">
-            <ShieldCheck className="w-7 h-7" />
+        <div className="flex items-center gap-4">
+          <div className="p-0.5 rounded-full bg-gradient-to-tr from-orange-500 via-amber-400 to-orange-600 shadow-xl shadow-orange-500/25 flex items-center justify-center">
+            <img 
+              src="/logo.png" 
+              alt="Pedido 360 Logo" 
+              className="h-12 w-12 rounded-full object-cover shadow-inner"
+            />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-black text-white tracking-tight">
-                MeuPedido<span className="bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">360</span> SuperAdmin
+                MeuPedido<span className="text-orange-500">360</span> <span className="bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">SuperAdmin</span>
               </h1>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">

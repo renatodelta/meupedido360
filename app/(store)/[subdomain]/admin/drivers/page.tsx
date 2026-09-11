@@ -209,7 +209,7 @@ export default function AdminDriversPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-900 pb-6">
           <div className="space-y-1">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-500 to-pink-600 flex items-center justify-center shadow-lg shadow-rose-500/20">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-500 flex items-center justify-center shadow-lg shadow-orange-500/20">
                 <Bike className="w-6 h-6 text-white" />
               </div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Gestão de Entregadores</h1>
@@ -227,7 +227,7 @@ export default function AdminDriversPage() {
             </button>
             <button
               onClick={() => setShowAddModal(true)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white text-sm font-semibold shadow-lg shadow-rose-500/20 transition"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-sm font-semibold shadow-lg shadow-orange-500/20 transition"
             >
               <Plus className="w-4 h-4" />
               Novo Entregador
@@ -415,7 +415,7 @@ export default function AdminDriversPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2.5 text-xs font-semibold text-white bg-gradient-to-r from-rose-500 to-pink-600 rounded-xl hover:from-rose-600 hover:to-pink-700 transition disabled:opacity-50"
+                  className="px-5 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 rounded-xl hover:from-orange-600 hover:to-orange-700 transition disabled:opacity-50 shadow-md shadow-orange-500/20"
                 >
                   {submitting ? 'Salvando...' : 'Salvar Entregador'}
                 </button>

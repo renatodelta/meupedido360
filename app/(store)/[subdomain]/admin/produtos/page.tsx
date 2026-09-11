@@ -430,7 +430,7 @@ export default function AdminProductsPage() {
               href="/"
               target="_blank"
               rel="noreferrer"
-              className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white text-xs font-semibold flex items-center gap-2 transition shadow-lg shadow-rose-500/20"
+              className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-xs font-bold flex items-center gap-2 transition shadow-lg shadow-orange-500/20"
             >
               <Eye className="w-3.5 h-3.5" />
               <span>Ver Cardápio ao Vivo</span>
@@ -474,7 +474,7 @@ export default function AdminProductsPage() {
             <button
               onClick={() => handleOpenProductModal()}
               disabled={categories.length === 0}
-              className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white text-sm font-bold flex items-center justify-center gap-2 transition shadow-lg shadow-rose-500/20 disabled:opacity-50"
+              className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-sm font-bold flex items-center justify-center gap-2 transition shadow-lg shadow-orange-500/20 disabled:opacity-50"
             >
               <Plus className="w-4 h-4" />
               <span>+ Novo Produto</span>
@@ -532,7 +532,7 @@ export default function AdminProductsPage() {
             </p>
             <button
               onClick={() => setIsCategoryModalOpen(true)}
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 text-white text-sm font-bold shadow-lg shadow-rose-500/20 inline-flex items-center gap-2"
+              className="px-6 py-3 rounded-xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 text-white text-sm font-bold shadow-lg shadow-orange-500/20 inline-flex items-center gap-2 hover:scale-105 transition"
             >
               <Plus className="w-4 h-4" />
               <span>Criar Primeira Seção</span>
@@ -550,7 +550,7 @@ export default function AdminProductsPage() {
             </p>
             <button
               onClick={() => handleOpenProductModal()}
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 text-white text-sm font-bold shadow-lg shadow-rose-500/20 inline-flex items-center gap-2"
+              className="px-6 py-3 rounded-xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 text-white text-sm font-bold shadow-lg shadow-orange-500/20 inline-flex items-center gap-2 hover:scale-105 transition"
             >
               <Plus className="w-4 h-4" />
               <span>Cadastrar Primeiro Produto</span>
@@ -832,7 +832,7 @@ export default function AdminProductsPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white text-sm font-bold shadow-lg shadow-rose-500/25 flex items-center gap-2 disabled:opacity-50"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-sm font-bold shadow-lg shadow-orange-500/25 flex items-center gap-2 disabled:opacity-50"
                 >
                   {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                   <span>{editingProduct ? 'Salvar Alterações' : 'Cadastrar Produto'}</span>
@@ -886,7 +886,7 @@ export default function AdminProductsPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white text-sm font-bold shadow-lg shadow-rose-500/25 flex items-center gap-2 disabled:opacity-50"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-sm font-bold shadow-lg shadow-orange-500/25 flex items-center gap-2 disabled:opacity-50"
                 >
                   {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                   <span>Criar Seção</span>

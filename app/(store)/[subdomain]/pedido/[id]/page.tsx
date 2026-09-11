@@ -326,7 +326,7 @@ export default function OrderTrackingPage() {
         </div>
         <a
           href="/"
-          className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 text-white font-bold text-xs shadow-lg hover:scale-105 transition"
+          className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 text-white font-bold text-xs shadow-lg hover:scale-105 transition"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           <span>Voltar ao Cardápio</span>

@@ -1,23 +1,15 @@
-import React from 'react';
-
 export const metadata = {
-  title: 'MeuPedido360 - Plataforma SaaS de Cardápio Digital & Delivery',
-  description: 'Crie seu cardápio digital em segundos com subdomínio próprio e integração com Mercado Pago.',
+  title: 'MeuPedido360 - Cardápio Digital & Delivery',
+  description: 'Crie seu cardápio digital em segundos com subdomínio próprio e gestão de pedidos em tempo real.',
 };
 
-/**
- * app/(public)/layout.tsx
- * 
- * Root layout for the public marketing site.
- * Imports globals.css to apply Tailwind styling.
- */
 export default function PublicLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="min-h-screen bg-[#061325] text-slate-100">
       {children}
     </div>
   );

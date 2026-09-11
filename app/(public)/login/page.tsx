@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
-import { Zap, Mail, Lock, ArrowRight, Loader2, AlertCircle, Store } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Loader2, AlertCircle, Sparkles, Store, ShieldCheck } from 'lucide-react';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -75,34 +75,39 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-[#061325] text-slate-100 flex items-center justify-center p-4 relative overflow-hidden font-sans">
+      
       {/* Background ambient glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[400px] pointer-events-none opacity-20 blur-[150px] bg-gradient-to-r from-rose-500 via-pink-600 to-purple-600 -z-10 rounded-full" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[450px] pointer-events-none opacity-20 blur-[160px] bg-gradient-to-r from-orange-500 via-amber-500 to-blue-600 -z-10 rounded-full" />
 
       <div className="w-full max-w-md space-y-8">
         
-        {/* Brand Header */}
-        <div className="text-center space-y-3">
-          <a href="/" className="inline-flex items-center gap-2 group">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-600 flex items-center justify-center shadow-xl shadow-rose-500/20 group-hover:scale-105 transition-transform">
-              <Zap className="w-7 h-7 text-white fill-white/10" />
+        {/* Brand Header with prominent Logo */}
+        <div className="text-center space-y-4">
+          <a href="/" className="inline-flex flex-col items-center group">
+            <div className="p-1 rounded-full bg-gradient-to-tr from-orange-500 via-amber-400 to-orange-600 shadow-2xl shadow-orange-500/30 group-hover:scale-105 transition-transform duration-300">
+              <img 
+                src="/logo.png" 
+                alt="Pedido 360 Logo" 
+                className="h-20 w-20 sm:h-24 sm:w-24 rounded-full object-cover shadow-inner"
+              />
             </div>
-            <span className="text-3xl font-black tracking-tight text-white">
-              MeuPedido<span className="bg-gradient-to-r from-rose-400 to-pink-500 bg-clip-text text-transparent">360</span>
-            </span>
           </a>
-          <h1 className="text-2xl font-bold text-white tracking-tight">
-            Acessar Área do Lojista
-          </h1>
-          <p className="text-xs text-slate-400">
-            Entre com suas credenciais para gerenciar seus pedidos e cardápio
-          </p>
+          
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              Acessar Painel do Lojista
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-400 mt-1">
+              Gerencie seus pedidos em tempo real, cardápio e entregadores
+            </p>
+          </div>
         </div>
 
         {/* Login Form Box */}
         <form
           onSubmit={handleLogin}
-          className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl space-y-5"
+          className="bg-slate-900/70 border border-slate-800 rounded-3xl p-6 sm:p-8 backdrop-blur-2xl shadow-2xl space-y-5"
         >
           {errorMessage && (
             <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-start gap-3 text-rose-300 text-xs">
@@ -113,7 +118,7 @@ export default function LoginPage() {
 
           {/* Email Input */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-medium text-slate-300">
+            <label className="block text-xs font-bold text-slate-300">
               E-mail de Acesso
             </label>
             <div className="relative">
@@ -124,14 +129,14 @@ export default function LoginPage() {
                 placeholder="seu@restaurante.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition duration-150"
+                className="w-full pl-10 pr-4 py-3 bg-slate-950/80 border border-slate-800 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition duration-150"
               />
             </div>
           </div>
 
           {/* Password Input */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-medium text-slate-300">
+            <label className="block text-xs font-bold text-slate-300">
               Sua Senha
             </label>
             <div className="relative">
@@ -142,7 +147,7 @@ export default function LoginPage() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition duration-150"
+                className="w-full pl-10 pr-4 py-3 bg-slate-950/80 border border-slate-800 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition duration-150"
               />
             </div>
           </div>
@@ -151,12 +156,12 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3.5 px-6 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 shadow-xl shadow-rose-500/20 hover:scale-[1.01] transition duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full py-3.5 px-6 rounded-xl font-extrabold text-sm text-white bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-xl shadow-orange-500/25 hover:scale-[1.01] active:scale-[0.99] transition duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {isLoading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Entrando...</span>
+                <span>Entrando no painel...</span>
               </>
             ) : (
               <>
@@ -167,11 +172,17 @@ export default function LoginPage() {
           </button>
 
           <div className="text-center pt-2">
-            <a href="/signup" className="text-xs text-slate-400 hover:text-rose-400 transition">
-              Ainda não tem conta? <strong className="text-rose-400">Criar minha loja em 2 minutos</strong>
+            <a href="/signup" className="text-xs text-slate-400 hover:text-orange-400 transition">
+              Ainda não tem conta? <strong className="text-orange-400 font-bold">Criar minha loja em 2 minutos</strong>
             </a>
           </div>
         </form>
+
+        {/* Support Note */}
+        <div className="text-center text-xs text-slate-500 flex items-center justify-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-emerald-500" />
+          <span>Ambiente Seguro com Autenticação Criptografada</span>
+        </div>
 
       </div>
     </div>

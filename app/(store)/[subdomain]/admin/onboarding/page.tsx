@@ -21,8 +21,8 @@ export default function OnboardingPage() {
   const [logoPreview, setLogoPreview] = useState<string>('');
   
   // Custom theme colors state
-  const [primaryColor, setPrimaryColor] = useState('#E11D48');
-  const [secondaryColor, setSecondaryColor] = useState('#1E293B');
+  const [primaryColor, setPrimaryColor] = useState('#f97316');
+  const [secondaryColor, setSecondaryColor] = useState('#0b2545');
   const [backgroundColor, setBackgroundColor] = useState('#F8FAFC');
   const [success, setSuccess] = useState(false);
   const [logMsg, setLogMsg] = useState<string>('');
@@ -41,8 +41,8 @@ export default function OnboardingPage() {
 
         if (data) {
           setTenant(data);
-          setPrimaryColor(data.primary_color || '#E11D48');
-          setSecondaryColor(data.secondary_color || '#1E293B');
+          setPrimaryColor(data.primary_color || '#f97316');
+          setSecondaryColor(data.secondary_color || '#0b2545');
           setBackgroundColor(data.background_color || '#F8FAFC');
           if (data.logo_url) {
             setLogoPreview(data.logo_url);
@@ -281,12 +281,12 @@ export default function OnboardingPage() {
         
         {/* Header Title */}
         <div className="text-center space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-600 flex items-center justify-center mx-auto shadow-lg shadow-rose-500/20">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-orange-500 to-amber-500 flex items-center justify-center mx-auto shadow-lg shadow-orange-500/20">
             <Paintbrush className="w-6 h-6 text-white" />
           </div>
           <h1 className="text-3xl font-black tracking-tight text-white">Setup Visual do Lojista</h1>
           <p className="text-slate-400 text-sm">
-            Configure a marca do restaurante **{tenant.name}** (<code className="text-rose-400 font-mono text-xs">{subdomain}.meupedido360.com</code>).
+            Configure a marca do restaurante **{tenant.name}** (<code className="text-orange-400 font-mono text-xs">{subdomain}.meupedido360.com</code>).
           </p>
         </div>
 
