@@ -201,17 +201,28 @@ function SignupFormContent() {
                     : 'border-slate-800 bg-slate-950/50 text-slate-400 hover:border-slate-700'
                 }`}
               >
-                <div className="absolute -top-2.5 -right-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-                  Popular
+                <div className="absolute -top-2.5 -right-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  Em Breve
                 </div>
                 <div className="text-xs font-bold text-slate-400 mb-1">Completo</div>
                 <div className="text-base font-black text-white">Mensal Pro</div>
                 <div className="text-xl font-black text-orange-400 mt-2">
                   R$ 69,90<span className="text-xs font-normal text-slate-400">/mês</span>
                 </div>
-                <div className="text-[11px] text-slate-400 mt-1">Pix ou Cartão</div>
+                <div className="text-[11px] text-amber-300 font-semibold mt-1">Lançamento em Breve</div>
               </button>
             </div>
+
+            {plan === 'pro' && (
+              <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300 space-y-1">
+                <div className="font-bold text-amber-400 flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 flex-shrink-0" /> Acesso Premium em Breve!
+                </div>
+                <p className="text-slate-300 text-[11px] leading-relaxed">
+                  A contratação do Plano Pro estará liberada em breve. Ao cadastrar-se agora, você ganha <strong>7 dias grátis de acesso completo</strong> para testar a plataforma sem custos!
+                </p>
+              </div>
+            )}
 
             {/* Plan Perks List */}
             <div className="pt-4 border-t border-slate-800 space-y-3">
@@ -432,8 +443,8 @@ function SignupFormContent() {
                   </>
                 ) : plan === 'pro' ? (
                   <>
-                    <CreditCard className="w-5 h-5" />
-                    <span>Ir para Pagamento Seguro (R$ 69,90/mês)</span>
+                    <Sparkles className="w-5 h-5 text-amber-300" />
+                    <span>Criar Minha Loja Grátis (Testar 7 Dias)</span>
                     <ArrowRight className="w-4 h-4" />
                   </>
                 ) : (

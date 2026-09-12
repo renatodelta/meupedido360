@@ -150,35 +150,14 @@ export async function POST(request: Request) {
       storeDashboardUrl = `https://${slug}.meupedido360.com/admin/onboarding`;
     }
 
-    // PLAN: TRIAL
-    if (plan === 'trial') {
-      console.log(`[Signup] Trial account created successfully for ${slug}. Redirecting to store.`);
-      return NextResponse.json({
-        success: true,
-        plan: 'trial',
-        redirect_url: storeDashboardUrl,
-        tenant,
-      });
-    }
-
-    // PLAN: PRO (Kiwify or Mercado Pago Checkout)
-    if (kiwifyCheckoutUrl) {
-      console.log(`[Signup] Pro plan selected for ${slug}. Redirecting to Kiwify checkout...`);
-      const checkoutWithParams = new URL(kiwifyCheckoutUrl);
-      if (email) checkoutWithParams.searchParams.set('email', email);
-      if (name) checkoutWithParams.searchParams.set('name', name);
-      if (phone) checkoutWithParams.searchParams.set('phone', phone);
-      checkoutWithParams.searchParams.set('custom_tenant_id', tenant.id);
-      checkoutWithParams.searchParams.set('custom_slug', tenant.slug);
-      checkoutWithParams.searchParams.set('src', `slug:${tenant.slug}`);
-
-      return NextResponse.json({
-        success: true,
-        plan: 'pro',
-        redirect_url: checkoutWithParams.toString(),
-        tenant,
-      });
-    }
+    // PLAN: TRIAL / PRO (During launch prep, all accounts receive full 7-Day Trial access without checkout)
+    console.log(`[Signup] Account created successfully for ${slug} on 7-Day Trial. Redirecting to store dashboard.`);
+    return NextResponse.json({
+      success: true,
+      plan: 'trial',
+      redirect_url: storeDashboardUrl,
+      tenant,
+    });
 
     console.log(`[Signup] Pro plan selected for ${slug}. Generating Mercado Pago preference...`);
 
