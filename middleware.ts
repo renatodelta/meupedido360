@@ -82,8 +82,8 @@ export const config = {
      * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
-     * - favicon.ico, sitemap.xml, robots.txt (static files)
+     * - static files (favicon, sitemap, robots, manifest, icons)
      */
-    '/((?!api/|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)',
+    '/((?!api/|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.json|icon|apple-icon).*)',
   ],
 };
