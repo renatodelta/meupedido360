@@ -177,28 +177,46 @@ export async function POST(request: Request) {
     console.log(`[Signup] Pro plan selected for ${slug}. Generating Asaas checkout...`);
 
     // A. Direct Asaas API Integration if configured
-    if (asaasApiKey && !asaasApiKey.includes('sua_chave') && asaasApiKey.startsWith('$aact_')) {
+    if (asaasApiKey && !asaasApiKey.includes('sua_chave')) {
       try {
         let asaasCustomerId = '';
 
-        // Create Asaas Customer
-        const custRes = await fetch(`${asaasBaseUrl}/customers`, {
-          method: 'POST',
-          headers: {
-            access_token: asaasApiKey,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name,
-            email,
-            mobilePhone: phone || undefined,
-            externalReference: createdTenantId,
-          }),
+        // 1. Try finding existing customer in Asaas by email
+        const findCustRes = await fetch(`${asaasBaseUrl}/customers?email=${encodeURIComponent(email)}`, {
+          method: 'GET',
+          headers: { access_token: asaasApiKey },
         });
 
-        if (custRes.ok) {
-          const custData = await custRes.json();
-          asaasCustomerId = custData.id;
+        if (findCustRes.ok) {
+          const findData = await findCustRes.json();
+          if (findData.data && findData.data.length > 0) {
+            asaasCustomerId = findData.data[0].id;
+          }
+        }
+
+        // 2. Create Asaas Customer if not found
+        if (!asaasCustomerId) {
+          const custRes = await fetch(`${asaasBaseUrl}/customers`, {
+            method: 'POST',
+            headers: {
+              access_token: asaasApiKey,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              name,
+              email,
+              mobilePhone: phone || undefined,
+              externalReference: createdTenantId,
+            }),
+          });
+
+          if (custRes.ok) {
+            const custData = await custRes.json();
+            asaasCustomerId = custData.id;
+          } else {
+            const errText = await custRes.text();
+            console.error('[Signup] Error creating Asaas Customer:', custRes.status, errText);
+          }
         }
 
         if (asaasCustomerId) {
@@ -214,7 +232,7 @@ export async function POST(request: Request) {
             },
             body: JSON.stringify({
               customer: asaasCustomerId,
-              billingType: 'UNDEFINED',
+              billingType: 'UNDEFINED', // Customer chooses PIX, Card or Boleto
               value: 79.90,
               nextDueDate: nextDueDateStr,
               cycle: 'MONTHLY',
@@ -246,6 +264,9 @@ export async function POST(request: Request) {
                 tenant,
               });
             }
+          } else {
+            const subErrText = await subRes.text();
+            console.error('[Signup] Error creating Asaas Subscription:', subRes.status, subErrText);
           }
         }
       } catch (asaasErr) {
@@ -268,15 +289,12 @@ export async function POST(request: Request) {
       });
     }
 
-    // C. Fallback Demo Simulation mode
+    // C. Error feedback if Asaas API Key is missing or invalid
     return NextResponse.json({
-      success: true,
-      plan: 'pro',
-      is_demo: true,
-      message: 'Modo Demonstração: configure ASAAS_API_KEY no .env.local para checkout real.',
-      redirect_url: `${storeDashboardUrl}?demo_checkout=true`,
+      error: 'Para testar o pagamento real do Plano Pro no Asaas, adicione sua ASAAS_API_KEY no arquivo .env.local! (Sua conta de teste foi criada no Trial de 7 Dias).',
+      redirect_url: storeDashboardUrl,
       tenant,
-    });
+    }, { status: 400 });
 
   } catch (error: any) {
     console.error('[Signup] Exception occurred:', error);
