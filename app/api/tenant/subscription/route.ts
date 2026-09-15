@@ -15,7 +15,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
  * Body: { slug: string }
  * 
  * Generates an Asaas Checkout or Subscription link for an existing tenant to subscribe or renew
- * their monthly Pro plan (R$ 69,90/mês).
+ * their monthly Pro plan (R$ 79,90/mês).
  */
 export async function POST(request: Request) {
   try {
@@ -119,7 +119,7 @@ export async function POST(request: Request) {
           body: JSON.stringify({
             customer: asaasCustomerId,
             billingType: 'UNDEFINED', // Allows customer to select PIX, Card or Boleto
-            value: 69.90,
+            value: 79.90,
             nextDueDate: nextDueDateStr,
             cycle: 'MONTHLY',
             description: `MeuPedido360 - Plano Completo Pro (${tenant.name})`,

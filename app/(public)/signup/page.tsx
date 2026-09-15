@@ -207,7 +207,7 @@ function SignupFormContent() {
                 <div className="text-xs font-bold text-slate-400 mb-1">Completo</div>
                 <div className="text-base font-black text-white">Mensal Pro</div>
                 <div className="text-xl font-black text-orange-400 mt-2">
-                  R$ 69,90<span className="text-xs font-normal text-slate-400">/mês</span>
+                  R$ 79,90<span className="text-xs font-normal text-slate-400">/mês</span>
                 </div>
                 <div className="text-[11px] text-amber-300 font-semibold mt-1">Lançamento em Breve</div>
               </button>

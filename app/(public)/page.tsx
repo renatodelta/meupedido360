@@ -30,7 +30,7 @@ export default function LandingPage() {
   const [monthlyRevenue, setMonthlyRevenue] = useState(15000);
   const marketplaceFeeRate = 0.27; // 27% average commission on traditional delivery apps
   const marketplaceCost = Math.round(monthlyRevenue * marketplaceFeeRate);
-  const meuPedidoCost = 69.90;
+  const meuPedidoCost = 79.90;
   const monthlySavings = Math.max(0, marketplaceCost - meuPedidoCost);
   const annualSavings = monthlySavings * 12;
 
@@ -43,7 +43,7 @@ export default function LandingPage() {
     },
     {
       q: 'O MeuPedido360 cobra porcentagem sobre as minhas vendas?',
-      a: 'Zero porcentagem! Você paga apenas o valor fixo da assinatura mensal (R$ 69,90) e 100% do faturamento dos seus pedidos vai direto para você.'
+      a: 'Zero porcentagem! Você paga apenas o valor fixo da assinatura mensal (R$ 79,90) e 100% do faturamento dos seus pedidos vai direto para você.'
     },
     {
       q: 'Como funciona a gestão de motoboys e entregadores?',
@@ -642,7 +642,7 @@ export default function LandingPage() {
                 Todo o poder da nossa plataforma de delivery para alavancar suas vendas recorrentes sem intermediários.
               </p>
               <div className="text-4xl font-black text-white">
-                R$ 69,90<span className="text-sm font-normal text-slate-400">/mês</span>
+                R$ 79,90<span className="text-sm font-normal text-slate-400">/mês</span>
               </div>
 
               <div className="p-3.5 rounded-2xl bg-orange-500/10 border border-orange-500/30 text-xs text-orange-300 space-y-1">

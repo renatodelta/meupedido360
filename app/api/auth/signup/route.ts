@@ -202,7 +202,7 @@ export async function POST(request: Request) {
             body: JSON.stringify({
               customer: asaasCustomerId,
               billingType: 'UNDEFINED',
-              value: 69.90,
+              value: 79.90,
               nextDueDate: nextDueDateStr,
               cycle: 'MONTHLY',
               description: `MeuPedido360 - Plano Completo Pro (${store_name})`,
