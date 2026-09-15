@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { 
   Shield, 
@@ -33,6 +33,18 @@ export default function LandingPage() {
   const meuPedidoCost = 79.90;
   const monthlySavings = Math.max(0, marketplaceCost - meuPedidoCost);
   const annualSavings = monthlySavings * 12;
+  const [salesEnabled, setSalesEnabled] = useState<boolean>(true);
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(res => res.json())
+      .then(data => {
+        if (typeof data.sales_enabled === 'boolean') {
+          setSalesEnabled(data.sales_enabled);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
@@ -628,9 +640,11 @@ export default function LandingPage() {
 
           {/* Plan 2: Pro (Highlighted - Coming Soon) */}
           <div className="p-8 rounded-3xl bg-gradient-to-b from-slate-900/90 via-[#0B2545]/40 to-slate-900/90 border-2 border-orange-500/60 backdrop-blur-md relative overflow-hidden flex flex-col justify-between space-y-6 shadow-2xl shadow-orange-500/10">
-            <div className="absolute top-0 right-0 bg-gradient-to-l from-emerald-500 to-teal-500 text-white text-xs font-black px-4 py-1.5 rounded-bl-2xl uppercase tracking-wider flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5" />
-              PLANO RECOMENDADO
+            <div className={`absolute top-0 right-0 bg-gradient-to-l text-white text-xs font-black px-4 py-1.5 rounded-bl-2xl uppercase tracking-wider flex items-center gap-1.5 ${
+              salesEnabled ? 'from-emerald-500 to-teal-500' : 'from-amber-500 to-orange-500'
+            }`}>
+              {salesEnabled ? <Sparkles className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
+              {salesEnabled ? 'PLANO RECOMENDADO' : 'EM BREVE'}
             </div>
             
             <div className="space-y-4">
@@ -645,14 +659,25 @@ export default function LandingPage() {
                 R$ 79,90<span className="text-sm font-normal text-slate-400">/mês</span>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-300 space-y-1">
-                <div className="font-bold flex items-center gap-1.5 text-emerald-400">
-                  <Sparkles className="w-3.5 h-3.5" /> Ativação Imediata via Asaas!
+              {salesEnabled ? (
+                <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-300 space-y-1">
+                  <div className="font-bold flex items-center gap-1.5 text-emerald-400">
+                    <Sparkles className="w-3.5 h-3.5" /> Ativação Imediata via Asaas!
+                  </div>
+                  <p className="text-slate-300 leading-relaxed">
+                    Assinatura mensal recorrente via PIX, Cartão de Crédito ou Boleto com liberação automática de todos os recursos da sua loja!
+                  </p>
                 </div>
-                <p className="text-slate-300 leading-relaxed">
-                  Assinatura mensal recorrente via PIX, Cartão de Crédito ou Boleto com liberação automática de todos os recursos da sua loja!
-                </p>
-              </div>
+              ) : (
+                <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300 space-y-1">
+                  <div className="font-bold flex items-center gap-1.5 text-amber-400">
+                    <Clock className="w-3.5 h-3.5" /> Lançamento em Breve!
+                  </div>
+                  <p className="text-slate-300 leading-relaxed">
+                    A contratação direta do Plano Pro estará liberada em breve. Você pode criar sua conta no Trial Grátis de 7 dias!
+                  </p>
+                </div>
+              )}
             </div>
             
             <ul className="space-y-3.5 text-sm text-slate-200 font-medium">
@@ -665,10 +690,10 @@ export default function LandingPage() {
             </ul>
 
             <a 
-              href="/signup?plan=pro"
+              href={salesEnabled ? "/signup?plan=pro" : "/signup?plan=trial"}
               className="w-full text-center py-4 text-sm font-extrabold text-white bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 rounded-xl transition duration-200 shadow-xl shadow-orange-500/25 hover:scale-[1.02] flex items-center justify-center gap-2"
             >
-              <span>Assinar Plano Pro Agora (R$ 79,90/mês)</span>
+              <span>{salesEnabled ? "Assinar Plano Pro Agora (R$ 79,90/mês)" : "Disponível em Breve (Testar 7 Dias Grátis)"}</span>
               <ArrowRight className="w-4 h-4" />
             </a>
           </div>

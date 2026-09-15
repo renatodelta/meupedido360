@@ -149,9 +149,22 @@ export async function POST(request: Request) {
       storeDashboardUrl = `https://${slug}.meupedido360.com/admin/onboarding`;
     }
 
-    // PLAN: TRIAL -> 7-Day Trial direct onboarding
-    if (plan === 'trial') {
-      console.log(`[Signup] Account created successfully for ${slug} on 7-Day Trial. Redirecting to store dashboard.`);
+    // Check global sales status
+    let isSalesActive = true;
+    try {
+      const { data: setSetting } = await supabase
+        .from('platform_settings')
+        .select('value')
+        .eq('key', 'sales_enabled')
+        .maybeSingle();
+      if (setSetting && typeof setSetting.value === 'boolean') {
+        isSalesActive = setSetting.value;
+      }
+    } catch (e) {}
+
+    // PLAN: TRIAL or Sales Locked -> 7-Day Trial direct onboarding
+    if (plan === 'trial' || !isSalesActive) {
+      console.log(`[Signup] Account created successfully for ${slug} on 7-Day Trial (Sales Active: ${isSalesActive}). Redirecting to store dashboard.`);
       return NextResponse.json({
         success: true,
         plan: 'trial',

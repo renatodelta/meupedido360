@@ -84,15 +84,27 @@ export default function SuperAdminDashboard() {
   const [newPassword, setNewPassword] = useState('');
   const [isResettingPassword, setIsResettingPassword] = useState(false);
 
-  // Load Super Admin Data
+  // Global Sales Lock/Unlock State
+  const [salesEnabled, setSalesEnabled] = useState<boolean>(true);
+  const [togglingSales, setTogglingSales] = useState<boolean>(false);
+
+  // Load Super Admin Data & Settings
   const loadData = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/superadmin/tenants');
-      const data = await res.json();
+      const [resTenants, resSettings] = await Promise.all([
+        fetch('/api/superadmin/tenants'),
+        fetch('/api/settings'),
+      ]);
 
-      if (data.metrics) setMetrics(data.metrics);
-      if (data.tenants) setTenants(data.tenants);
+      const dataTenants = await resTenants.json();
+      const dataSettings = await resSettings.json();
+
+      if (dataTenants.metrics) setMetrics(dataTenants.metrics);
+      if (dataTenants.tenants) setTenants(dataTenants.tenants);
+      if (typeof dataSettings.sales_enabled === 'boolean') {
+        setSalesEnabled(dataSettings.sales_enabled);
+      }
     } catch (err) {
       console.error('Erro ao carregar dados do SuperAdmin:', err);
       showFeedback('error', 'Falha ao carregar dados do sistema.');
@@ -108,6 +120,28 @@ export default function SuperAdminDashboard() {
   const showFeedback = (type: 'success' | 'error', text: string) => {
     setFeedbackMsg({ type, text });
     setTimeout(() => setFeedbackMsg(null), 4500);
+  };
+
+  const handleToggleSales = async (newStatus: boolean) => {
+    try {
+      setTogglingSales(true);
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sales_enabled: newStatus }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSalesEnabled(newStatus);
+        showFeedback('success', data.message);
+      } else {
+        showFeedback('error', data.error || 'Erro ao alterar status das vendas.');
+      }
+    } catch (err) {
+      showFeedback('error', 'Erro ao conectar com o servidor.');
+    } finally {
+      setTogglingSales(false);
+    }
   };
 
   // Change Subscription Plan Status (Activate, Suspend, Trial)
@@ -298,6 +332,49 @@ export default function SuperAdminDashboard() {
           </button>
         </div>
       )}
+
+      {/* SALES LOCK / UNLOCK CONTROL BANNER */}
+      <div className={`max-w-7xl mx-auto p-5 rounded-3xl border backdrop-blur-xl flex flex-col md:flex-row items-center justify-between gap-4 transition-all duration-300 ${
+        salesEnabled 
+          ? 'bg-emerald-950/30 border-emerald-500/40 shadow-lg shadow-emerald-500/5' 
+          : 'bg-amber-950/30 border-amber-500/40 shadow-lg shadow-amber-500/5'
+      }`}>
+        <div className="flex items-center gap-4">
+          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${
+            salesEnabled ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'
+          }`}>
+            {salesEnabled ? <Unlock className="w-6 h-6" /> : <Lock className="w-6 h-6" />}
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-base font-bold text-white">Status das Vendas & Assinaturas (Plano Pro)</h3>
+              <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider ${
+                salesEnabled ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+              }`}>
+                {salesEnabled ? '● Vendas Ativas (Liberadas)' : '🔒 Vendas Trancadas (Bloqueadas)'}
+              </span>
+            </div>
+            <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+              {salesEnabled 
+                ? 'O checkout via Asaas (R$ 79,90/mês) está LIBERADO no site e no cadastro para novos clientes.' 
+                : 'As vendas estão TRANCADAS. O site e o cadastro exibem "Em Breve" e forçam o Trial Grátis de 7 dias.'}
+            </p>
+          </div>
+        </div>
+
+        <button
+          disabled={togglingSales}
+          onClick={() => handleToggleSales(!salesEnabled)}
+          className={`px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition duration-200 flex-shrink-0 transform hover:scale-[1.02] active:scale-[0.98] ${
+            salesEnabled
+              ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40'
+              : 'bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black border border-emerald-400 shadow-lg shadow-emerald-500/20'
+          }`}
+        >
+          {togglingSales ? <Loader2 className="w-4 h-4 animate-spin" /> : salesEnabled ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+          <span>{salesEnabled ? 'Trancar / Bloquear Vendas' : 'Ativar / Liberar Vendas'}</span>
+        </button>
+      </div>
 
       {/* SAAS EXECUTIVE FINANCIAL & SUBSCRIPTION KPIS */}
       <div className="max-w-7xl mx-auto grid grid-cols-2 lg:grid-cols-5 gap-4">

@@ -40,6 +40,19 @@ function SignupFormContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const [salesEnabled, setSalesEnabled] = useState<boolean>(true);
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(res => res.json())
+      .then(data => {
+        if (typeof data.sales_enabled === 'boolean') {
+          setSalesEnabled(data.sales_enabled);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Sync plan if query param changes
   useEffect(() => {
     const qPlan = searchParams.get('plan');
@@ -201,25 +214,40 @@ function SignupFormContent() {
                     : 'border-slate-800 bg-slate-950/50 text-slate-400 hover:border-slate-700'
                 }`}
               >
-                <div className="absolute -top-2.5 -right-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-                  Asaas Checkout
+                <div className={`absolute -top-2.5 -right-2 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider bg-gradient-to-r ${
+                  salesEnabled ? 'from-emerald-500 to-teal-500' : 'from-amber-500 to-orange-500'
+                }`}>
+                  {salesEnabled ? 'Asaas Checkout' : 'Em Breve'}
                 </div>
                 <div className="text-xs font-bold text-slate-400 mb-1">Completo</div>
                 <div className="text-base font-black text-white">Mensal Pro</div>
                 <div className="text-xl font-black text-orange-400 mt-2">
                   R$ 79,90<span className="text-xs font-normal text-slate-400">/mês</span>
                 </div>
-                <div className="text-[11px] text-emerald-400 font-semibold mt-1">Ativação Imediata</div>
+                <div className={`text-[11px] font-semibold mt-1 ${salesEnabled ? 'text-emerald-400' : 'text-amber-300'}`}>
+                  {salesEnabled ? 'Ativação Imediata' : 'Lançamento em Breve'}
+                </div>
               </button>
             </div>
 
-            {plan === 'pro' && (
+            {plan === 'pro' && salesEnabled && (
               <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-300 space-y-1">
                 <div className="font-bold text-emerald-400 flex items-center gap-1.5">
                   <Sparkles className="w-4 h-4 flex-shrink-0" /> Cobrança Segura via Asaas
                 </div>
                 <p className="text-slate-300 text-[11px] leading-relaxed">
                   Ao concluir o cadastro, você será redirecionado para a página de pagamento do <strong>Asaas (PIX, Cartão de Crédito ou Boleto)</strong>. Sua loja será liberada automaticamente após a confirmação!
+                </p>
+              </div>
+            )}
+
+            {plan === 'pro' && !salesEnabled && (
+              <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300 space-y-1">
+                <div className="font-bold text-amber-400 flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 flex-shrink-0" /> Acesso Premium em Breve!
+                </div>
+                <p className="text-slate-300 text-[11px] leading-relaxed">
+                  A contratação direta do Plano Pro está temporariamente pausada. Ao cadastrar-se agora, você ganha <strong>7 dias grátis de acesso completo</strong> para testar a plataforma sem custos!
                 </p>
               </div>
             )}
