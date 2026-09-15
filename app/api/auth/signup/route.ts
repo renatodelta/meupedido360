@@ -3,10 +3,10 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-const mpAccessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN || '';
-const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-
-const kiwifyCheckoutUrl = process.env.NEXT_PUBLIC_KIWIFY_CHECKOUT_URL || process.env.KIWIFY_CHECKOUT_URL || '';
+const asaasApiKey = process.env.ASAAS_API_KEY || '';
+const asaasCheckoutUrl = process.env.NEXT_PUBLIC_ASAAS_CHECKOUT_URL || process.env.ASAAS_CHECKOUT_URL || '';
+const isSandbox = (process.env.ASAAS_ENVIRONMENT || '').toLowerCase() === 'sandbox';
+const asaasBaseUrl = isSandbox ? 'https://sandbox.asaas.com/api/v3' : 'https://www.asaas.com/api/v3';
 
 // Service role client bypasses RLS for administrative onboarding
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -19,7 +19,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
  * 2. Creates Tenant (Store) in public.tenants
  * 3. Creates Supabase Auth User with metadata containing tenant_id
  * 4. Ensures User profile association in public.users
- * 5. Generates Mercado Pago checkout preference for Pro plan OR initiates 7-day Trial
+ * 5. Generates Asaas checkout preference/subscription for Pro plan OR initiates 7-day Trial
  */
 export async function POST(request: Request) {
   let createdTenantId: string | null = null;
@@ -138,7 +138,7 @@ export async function POST(request: Request) {
       console.warn('[Signup] User profile upsert notice:', userProfileError.message);
     }
 
-    // 7. Route based on selected plan (Dynamically construct store URL)
+    // 7. Determine Dashboard URL
     const requestHost = (request.headers.get('x-forwarded-host') || request.headers.get('host') || '').toLowerCase();
     const isLocalhost = requestHost.includes('localhost') || requestHost.includes('127.0.0.1') || requestHost.includes('lvh.me');
 
@@ -146,139 +146,124 @@ export async function POST(request: Request) {
     if (isLocalhost) {
       storeDashboardUrl = `http://${slug}.lvh.me:3000/admin/onboarding`;
     } else {
-      // Production: Always point to the real HTTPS wildcard subdomain on meupedido360.com
       storeDashboardUrl = `https://${slug}.meupedido360.com/admin/onboarding`;
     }
 
-    // PLAN: TRIAL / PRO (During launch prep, all accounts receive full 7-Day Trial access without checkout)
-    console.log(`[Signup] Account created successfully for ${slug} on 7-Day Trial. Redirecting to store dashboard.`);
-    return NextResponse.json({
-      success: true,
-      plan: 'trial',
-      redirect_url: storeDashboardUrl,
-      tenant,
-    });
-
-    console.log(`[Signup] Pro plan selected for ${slug}. Generating Mercado Pago preference...`);
-
-    const isDummyToken = !mpAccessToken || mpAccessToken.includes('0000000000000000') || mpAccessToken.includes('exemplo');
-
-    if (isDummyToken) {
-      console.warn('[Signup] Mercado Pago credentials inactive. Providing demo redirection.');
+    // PLAN: TRIAL -> 7-Day Trial direct onboarding
+    if (plan === 'trial') {
+      console.log(`[Signup] Account created successfully for ${slug} on 7-Day Trial. Redirecting to store dashboard.`);
       return NextResponse.json({
         success: true,
-        plan: 'pro',
-        is_demo: true,
-        message: 'Modo Demonstração: configure o MERCADO_PAGO_ACCESS_TOKEN no .env.local para checkout real.',
-        redirect_url: `${storeDashboardUrl}?demo_checkout=true`,
+        plan: 'trial',
+        redirect_url: storeDashboardUrl,
         tenant,
       });
     }
 
-    try {
-      const mpResponse = await fetch('https://api.mercadopago.com/preapproval', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${mpAccessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          reason: 'MeuPedido360 - Plano Pro (Mensal)',
-          auto_recurring: {
-            frequency: 1,
-            frequency_type: 'months',
-            transaction_amount: 69.90,
-            currency_id: 'BRL',
-          },
-          back_url: `${storeDashboardUrl}?payment=approved`,
-          payer_email: email,
-          external_reference: tenant.id,
-          status: 'pending',
-        }),
-      });
+    // PLAN: PRO -> Asaas Integration
+    console.log(`[Signup] Pro plan selected for ${slug}. Generating Asaas checkout...`);
 
-      if (!mpResponse.ok) {
-        const mpErrText = await mpResponse.text();
-        console.warn('[Signup] Preapproval API failed, falling back to preference checkout:', mpErrText);
-        
-        // Fallback to Checkout Preferences if preapproval fails
-        const prefResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
+    // A. Direct Asaas API Integration if configured
+    if (asaasApiKey && !asaasApiKey.includes('sua_chave') && asaasApiKey.startsWith('$aact_')) {
+      try {
+        let asaasCustomerId = '';
+
+        // Create Asaas Customer
+        const custRes = await fetch(`${asaasBaseUrl}/customers`, {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${mpAccessToken}`,
+            access_token: asaasApiKey,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            items: [
-              {
-                title: 'MeuPedido360 - Plano Pro (Mensal)',
-                description: `Assinatura mensal para o restaurante ${store_name} (${slug}.meupedido360.com)`,
-                quantity: 1,
-                currency_id: 'BRL',
-                unit_price: 69.90,
-              },
-            ],
-            payer: { name, email },
-            external_reference: tenant.id,
-            back_urls: {
-              success: `${storeDashboardUrl}?payment=approved`,
-              failure: `${appUrl}/signup?payment=rejected`,
-              pending: `${storeDashboardUrl}?payment=pending`,
-            },
-            auto_return: 'approved',
-            notification_url: `${appUrl}/api/webhooks/mercadopago`,
+            name,
+            email,
+            mobilePhone: phone || undefined,
+            externalReference: createdTenantId,
           }),
         });
 
-        if (!prefResponse.ok) {
-          return NextResponse.json({
-            success: true,
-            plan: 'pro',
-            is_demo: true,
-            redirect_url: `${storeDashboardUrl}?mp_simulated=true`,
-            tenant,
-          });
+        if (custRes.ok) {
+          const custData = await custRes.json();
+          asaasCustomerId = custData.id;
         }
 
-        const prefData = await prefResponse.json();
-        const isTestToken = mpAccessToken.startsWith('TEST-');
-        const fallbackCheckoutUrl = isTestToken 
-          ? (prefData.sandbox_init_point || prefData.init_point) 
-          : (prefData.init_point || prefData.sandbox_init_point);
+        if (asaasCustomerId) {
+          const tomorrow = new Date();
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          const nextDueDateStr = tomorrow.toISOString().split('T')[0];
 
-        return NextResponse.json({
-          success: true,
-          plan: 'pro',
-          redirect_url: fallbackCheckoutUrl,
-          preference_id: prefData.id,
-          tenant,
-        });
+          const subRes = await fetch(`${asaasBaseUrl}/subscriptions`, {
+            method: 'POST',
+            headers: {
+              access_token: asaasApiKey,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              customer: asaasCustomerId,
+              billingType: 'UNDEFINED',
+              value: 69.90,
+              nextDueDate: nextDueDateStr,
+              cycle: 'MONTHLY',
+              description: `MeuPedido360 - Plano Completo Pro (${store_name})`,
+              externalReference: createdTenantId,
+            }),
+          });
+
+          if (subRes.ok) {
+            const subData = await subRes.json();
+            const payRes = await fetch(`${asaasBaseUrl}/subscriptions/${subData.id}/payments`, {
+              method: 'GET',
+              headers: { access_token: asaasApiKey },
+            });
+
+            let checkoutUrl = subData.invoiceUrl;
+            if (payRes.ok) {
+              const payData = await payRes.json();
+              if (payData.data && payData.data.length > 0 && payData.data[0].invoiceUrl) {
+                checkoutUrl = payData.data[0].invoiceUrl;
+              }
+            }
+
+            if (checkoutUrl) {
+              return NextResponse.json({
+                success: true,
+                plan: 'pro',
+                redirect_url: checkoutUrl,
+                tenant,
+              });
+            }
+          }
+        }
+      } catch (asaasErr) {
+        console.error('[Signup] Asaas fetch exception:', asaasErr);
       }
+    }
 
-      const mpData = await mpResponse.json();
-      const isTestToken = mpAccessToken.startsWith('TEST-');
-      const checkoutUrl = isTestToken 
-        ? (mpData.sandbox_init_point || mpData.init_point) 
-        : (mpData.init_point || mpData.sandbox_init_point);
+    // B. Fallback to Checkout Link if URL configured
+    if (asaasCheckoutUrl) {
+      const checkoutWithParams = new URL(asaasCheckoutUrl);
+      if (phone) checkoutWithParams.searchParams.set('phone', phone);
+      checkoutWithParams.searchParams.set('externalReference', createdTenantId || '');
+      checkoutWithParams.searchParams.set('custom_slug', slug);
 
       return NextResponse.json({
         success: true,
         plan: 'pro',
-        is_subscription: true,
-        redirect_url: checkoutUrl,
-        preapproval_id: mpData.id,
-        tenant,
-      });
-
-    } catch (mpErr) {
-      console.error('[Signup] Mercado Pago fetch exception:', mpErr);
-      return NextResponse.json({
-        success: true,
-        plan: 'pro',
-        redirect_url: `${storeDashboardUrl}?mp_fallback=true`,
+        redirect_url: checkoutWithParams.toString(),
         tenant,
       });
     }
+
+    // C. Fallback Demo Simulation mode
+    return NextResponse.json({
+      success: true,
+      plan: 'pro',
+      is_demo: true,
+      message: 'Modo Demonstração: configure ASAAS_API_KEY no .env.local para checkout real.',
+      redirect_url: `${storeDashboardUrl}?demo_checkout=true`,
+      tenant,
+    });
 
   } catch (error: any) {
     console.error('[Signup] Exception occurred:', error);

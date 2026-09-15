@@ -460,9 +460,9 @@ export default function LandingPage() {
             <div className="w-12 h-12 rounded-2xl bg-orange-500/15 text-orange-400 flex items-center justify-center group-hover:scale-110 transition-transform">
               <CreditCard className="w-6 h-6" />
             </div>
-            <h3 className="text-xl font-bold text-white group-hover:text-orange-400 transition-colors">Mercado Pago & Kiwify</h3>
+            <h3 className="text-xl font-bold text-white group-hover:text-orange-400 transition-colors">Asaas (PIX, Cartão e Boleto)</h3>
             <p className="text-slate-400 text-sm leading-relaxed">
-              Ativação automática via Webhook. Cobrança recorrente inteligente e liberação imediata de todos os recursos após a confirmação.
+              Ativação automática via Webhook do Asaas. Assinatura recorrente com renovação mensal e liberação imediata da loja.
             </p>
           </div>
 
@@ -775,7 +775,7 @@ export default function LandingPage() {
             <span>•</span>
             <span>Isolamento RLS</span>
             <span>•</span>
-            <span>Mercado Pago & Kiwify</span>
+            <span>Asaas Checkout</span>
           </div>
         </div>
       </footer>

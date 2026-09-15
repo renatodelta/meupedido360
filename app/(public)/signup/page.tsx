@@ -128,7 +128,7 @@ function SignupFormContent() {
         return;
       }
 
-      // Successful signup - redirect to Mercado Pago Checkout or Tenant Onboarding
+      // Successful signup - redirect to Asaas Checkout or Tenant Onboarding
       if (data.redirect_url) {
         window.location.href = data.redirect_url;
       } else {

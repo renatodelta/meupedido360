@@ -1,38 +1,43 @@
-# 🚀 MeuPedido360 - Status & Próximos Passos (Kiwify)
+# 🚀 MeuPedido360 - Status & Integração Asaas
 
-**Data de atualização:** 08/09/2026
-
----
-
-## ✅ O que foi concluído hoje:
-
-1. **Integração Completa da Kiwify:**
-   - Webhook criado em `app/api/webhooks/kiwify/route.ts` (ativação automática de loja em caso de pagamento e suspensão em caso de cancelamento/reembolso).
-   - Auto-onboarding: se alguém comprar direto pela Kiwify, o sistema cria a loja e o usuário automaticamente.
-   - Simulador de testes criado em `app/api/webhooks/kiwify/simulate/route.ts`.
-2. **Atualização do Plano Pro:**
-   - Valor alterado de R$ 59,90 para **R$ 69,90/mês** (Landing Page, Cadastro, Cálculo de MRR no SuperAdmin e API).
-3. **Capa Profissional Gerada:**
-   - Salva em `public/kiwify-cover.jpg` para uso no produto da Kiwify.
-4. **Git Sincronizado:**
-   - Commit e `git push` realizados com sucesso para a branch `main`.
+**Data de atualização:** 14/09/2026
 
 ---
 
-## 📋 Próximos Passos para Amanhã:
+## ✅ Integração Completa do Asaas Concluída
 
-1. **Copiar o Link do Checkout na Kiwify:**
-   - No painel da Kiwify > Produto criado > Aba **Links** > Copiar Link do Checkout.
-   - Adicionar em `.env.local` e na **Vercel**:
-     ```env
-     NEXT_PUBLIC_KIWIFY_CHECKOUT_URL=https://pay.kiwify.com.br/SEU_LINK
-     ```
+O provedor de pagamento e assinatura recorrente do MeuPedido360 foi migrado com sucesso da Kiwify / Mercado Pago para o **Asaas**.
 
-2. **Configurar o Webhook na Kiwify:**
-   - No painel da Kiwify > **Apps > Webhooks > Criar Webhook**.
-   - URL: `https://meupedido360.com/api/webhooks/kiwify`
-   - Eventos: *Compra aprovada, Assinatura renovada, Cancelamento, Reembolso, Chargeback*.
+1. **Webhook do Asaas Criado:**
+   - URL do Webhook: `app/api/webhooks/asaas/route.ts` (`POST /api/webhooks/asaas`).
+   - Ativação automática de lojas quando o pagamento for recebido ou confirmado (`PAYMENT_RECEIVED`, `PAYMENT_CONFIRMED`).
+   - Suspensão automática de lojas em caso de atraso/vencimento ou cancelamento (`PAYMENT_OVERDUE`, `PAYMENT_DELETED`, `PAYMENT_REFUNDED`).
+   - **Auto-onboarding:** Se um novo lojista assinar diretamente pelo Asaas, o sistema cria automaticamente a loja e o usuário proprietário.
 
-3. **Testar de Ponta a Ponta:**
-   - Clicar no botão "Testar webhook" na Kiwify para validar resposta 200.
-   - Fazer um cadastro de teste pelo site `https://meupedido360.com/signup?plan=pro`.
+2. **Simulador de Testes Local:**
+   - Criado em `app/api/webhooks/asaas/simulate/route.ts` (`POST /api/webhooks/asaas/simulate`).
+
+3. **Geração de Assinatura via API e Checkout Fallback:**
+   - Atualizados os endpoints [`app/api/tenant/subscription/route.ts`](file:///c:/xampp/htdocs/meupedido360/app/api/tenant/subscription/route.ts) e [`app/api/auth/signup/route.ts`](file:///c:/xampp/htdocs/meupedido360/app/api/auth/signup/route.ts) para criar faturas e assinaturas no Asaas enviando o `externalReference` (ID do Tenant).
+
+---
+
+## 📋 Como Configurar no Painel do Asaas:
+
+1. **Obter a Chave de API:**
+   - No painel do Asaas > **Configurações da Conta > Integrações > Chaves de API**.
+   - Gerar nova chave e copiar o código (`$aact_...`).
+
+2. **Configurar o Webhook de Cobranças:**
+   - No painel do Asaas > **Configurações da Conta > Integrações > Webhooks > Cobranças**.
+   - **URL do Webhook:** `https://meupedido360.com/api/webhooks/asaas`
+   - **Token de Acesso / Segredo:** Crie uma senha/token de segurança.
+   - **Eventos:** Marcar `PAYMENT_RECEIVED`, `PAYMENT_CONFIRMED`, `PAYMENT_OVERDUE`, `PAYMENT_DELETED`, `PAYMENT_REFUNDED`.
+
+3. **Adicionar Variáveis no `.env.local` e Vercel:**
+   ```env
+   ASAAS_API_KEY=$aact_sua_chave_de_api
+   ASAAS_WEBHOOK_SECRET=seu_token_de_acesso_webhook
+   NEXT_PUBLIC_ASAAS_CHECKOUT_URL=https://www.asaas.com/c/seu_link_fallback (opcional)
+   ASAAS_ENVIRONMENT=production
+   ```
