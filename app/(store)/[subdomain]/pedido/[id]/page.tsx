@@ -57,6 +57,7 @@ interface Order {
   customer_name: string;
   customer_phone: string;
   delivery_address_json: {
+    tipo?: string;
     rua?: string;
     numero?: string;
     bairro?: string;
@@ -607,29 +608,58 @@ export default function OrderTrackingPage() {
       {/* DETAILS GRID: ADDRESS & ITEMS BREAKDOWN */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-        {/* DELIVERY ADDRESS */}
+        {/* DELIVERY ADDRESS / PICKUP INSTRUCTIONS */}
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
-          <div className="flex items-center gap-2 text-rose-400 font-extrabold text-sm border-b border-slate-800 pb-3">
-            <MapPin className="w-4 h-4" />
-            <span>Endereço de Entrega</span>
-          </div>
+          {deliveryAddress.tipo === 'retirada' || order.delivery_fee === 0 ? (
+            <>
+              <div className="flex items-center gap-2 text-purple-400 font-extrabold text-sm border-b border-slate-800 pb-3">
+                <ShoppingBag className="w-4 h-4" />
+                <span>Retirada no Balcão</span>
+              </div>
 
-          <div className="space-y-1 text-xs">
-            <p className="font-bold text-white text-sm">
-              {deliveryAddress.rua || 'Rua não informada'}, {deliveryAddress.numero || 'S/N'}
-            </p>
-            <p className="text-slate-300">
-              Bairro: {deliveryAddress.bairro || 'Centro'}
-            </p>
-            {deliveryAddress.complemento && (
-              <p className="text-slate-400">
-                Complemento: {deliveryAddress.complemento}
-              </p>
-            )}
-            <p className="text-slate-500 pt-1">
-              Destinatário: <strong>{order.customer_name}</strong> ({formatPhone(order.customer_phone)})
-            </p>
-          </div>
+              <div className="space-y-2 text-xs">
+                <div className="p-3 rounded-2xl bg-purple-950/40 border border-purple-500/30 text-purple-200 space-y-1">
+                  <div className="font-extrabold text-sm flex items-center gap-2 text-white">
+                    <span>🛍️ Retirar no Estabelecimento</span>
+                  </div>
+                  <p className="text-slate-300">
+                    {tenant?.name || 'Restaurante'} • Apresente a senha abaixo no balcão para retirar.
+                  </p>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs">
+                  <span className="text-slate-400 font-semibold">Senha do Pedido:</span>
+                  <span className="font-mono font-black text-rose-400 text-sm">#{order.id.substring(0, 6).toUpperCase()}</span>
+                </div>
+                <p className="text-slate-500 pt-1">
+                  Cliente: <strong>{order.customer_name}</strong> ({formatPhone(order.customer_phone)})
+                </p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-2 text-rose-400 font-extrabold text-sm border-b border-slate-800 pb-3">
+                <MapPin className="w-4 h-4" />
+                <span>Endereço de Entrega</span>
+              </div>
+
+              <div className="space-y-1 text-xs">
+                <p className="font-bold text-white text-sm">
+                  {deliveryAddress.rua || 'Rua não informada'}, {deliveryAddress.numero || 'S/N'}
+                </p>
+                <p className="text-slate-300">
+                  Bairro: {deliveryAddress.bairro || 'Centro'}
+                </p>
+                {deliveryAddress.complemento && (
+                  <p className="text-slate-400">
+                    Complemento: {deliveryAddress.complemento}
+                  </p>
+                )}
+                <p className="text-slate-500 pt-1">
+                  Destinatário: <strong>{order.customer_name}</strong> ({formatPhone(order.customer_phone)})
+                </p>
+              </div>
+            </>
+          )}
 
           {deliveryAddress.troco_para && (
             <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300">

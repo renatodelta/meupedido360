@@ -67,6 +67,7 @@ export default function StoreMenuClient({
   const [activeCategory, setActiveCategory] = useState<string>(categories[0]?.id || 'all');
 
   // Checkout Form State
+  const [orderType, setOrderType] = useState<'delivery' | 'pickup'>('delivery');
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [addressRua, setAddressRua] = useState('');
@@ -217,7 +218,7 @@ export default function StoreMenuClient({
 
   const totalItemsCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-  const deliveryFee = 5.00;
+  const deliveryFee = orderType === 'pickup' ? 0 : 5.00;
   const totalOrder = subtotal + deliveryFee;
 
   const formatCurrency = (val: number) =>
@@ -244,9 +245,11 @@ export default function StoreMenuClient({
       return;
     }
 
-    if (!addressRua.trim() || !addressNumero.trim() || !addressBairro.trim()) {
-      setFormError('Preencha o endereço completo de entrega (Rua, Número e Bairro).');
-      return;
+    if (orderType === 'delivery') {
+      if (!addressRua.trim() || !addressNumero.trim() || !addressBairro.trim()) {
+        setFormError('Preencha o endereço completo de entrega (Rua, Número e Bairro).');
+        return;
+      }
     }
 
     try {
@@ -260,13 +263,23 @@ export default function StoreMenuClient({
         total_price: item.product.price * item.quantity,
       }));
 
-      const deliveryAddress = {
-        rua: addressRua.trim(),
-        numero: addressNumero.trim(),
-        bairro: addressBairro.trim(),
-        complemento: addressComplemento.trim() || undefined,
-        troco_para: paymentMethod === 'dinheiro_entrega' && trocoPara ? trocoPara : undefined,
-      };
+      const deliveryAddress = orderType === 'pickup'
+        ? {
+            tipo: 'retirada',
+            rua: 'Retirada no Balcão do Estabelecimento',
+            numero: 'S/N',
+            bairro: tenant?.name || 'Balcão da Loja',
+            complemento: 'Retirar no local',
+            troco_para: paymentMethod === 'dinheiro_entrega' && trocoPara ? trocoPara : undefined,
+          }
+        : {
+            tipo: 'entrega',
+            rua: addressRua.trim(),
+            numero: addressNumero.trim(),
+            bairro: addressBairro.trim(),
+            complemento: addressComplemento.trim() || undefined,
+            troco_para: paymentMethod === 'dinheiro_entrega' && trocoPara ? trocoPara : undefined,
+          };
 
       const res = await fetch('/api/tenant/orders', {
         method: 'POST',
@@ -641,104 +654,160 @@ export default function StoreMenuClient({
                 </div>
               </div>
 
-              {/* DELIVERY ADDRESS */}
+              {/* ORDER TYPE SELECTION (ENTREGA VS RETIRADA) */}
               <div className="space-y-3 pt-2 border-t border-slate-800/80">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-rose-400" />
-                    <span>Endereço para Entrega</span>
-                  </h4>
-
-                  {/* OPTIONAL GEOLOCATION BUTTON */}
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                  <Navigation className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Tipo de Pedido</span>
+                </h4>
+                <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    onClick={handleGetLocation}
-                    disabled={isLocating}
-                    className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 border border-rose-500/30 text-[11px] font-bold transition disabled:opacity-50"
-                  >
-                    {isLocating ? (
-                      <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-400" />
-                        <span>Buscando GPS...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Navigation className="w-3.5 h-3.5" />
-                        <span>📍 Usar minha localização atual</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                {locationStatus && (
-                  <div
-                    className={`p-2.5 rounded-xl text-xs flex items-center gap-2 ${
-                      locationStatus.type === 'success'
-                        ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-300'
-                        : 'bg-amber-500/15 border border-amber-500/30 text-amber-300'
+                    onClick={() => setOrderType('delivery')}
+                    className={`p-3 rounded-2xl border text-center transition flex items-center justify-center gap-2 ${
+                      orderType === 'delivery'
+                        ? 'border-rose-500 bg-rose-500/15 text-white shadow-lg'
+                        : 'border-slate-800 bg-slate-950/60 text-slate-400 hover:text-white'
                     }`}
                   >
-                    {locationStatus.type === 'success' ? (
-                      <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
-                    ) : (
-                      <AlertCircle className="w-4 h-4 shrink-0 text-amber-400" />
-                    )}
-                    <span>{locationStatus.message}</span>
-                  </div>
-                )}
+                    <span className="text-base">🛵</span>
+                    <div className="text-left">
+                      <div className="text-xs font-bold">Entrega em Domicílio</div>
+                      <div className="text-[10px] text-slate-400">Taxa de R$ 5,00</div>
+                    </div>
+                  </button>
 
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="col-span-2">
-                    <label className="block text-xs font-medium text-slate-300 mb-1">Rua / Avenida *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Ex: Av. Brasil"
-                      value={addressRua}
-                      onChange={e => setAddressRua(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-600 text-xs focus:outline-none focus:border-rose-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">Número *</label>
-                    <input
-                      ref={numeroInputRef}
-                      type="text"
-                      required
-                      placeholder="Ex: 1500"
-                      value={addressNumero}
-                      onChange={e => setAddressNumero(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-600 text-xs focus:outline-none focus:border-rose-500 font-semibold"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">Bairro *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Ex: Centro"
-                      value={addressBairro}
-                      onChange={e => setAddressBairro(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-600 text-xs focus:outline-none focus:border-rose-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">Complemento / Apto</label>
-                    <input
-                      type="text"
-                      placeholder="Ex: Apto 32 Bloco B"
-                      value={addressComplemento}
-                      onChange={e => setAddressComplemento(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-600 text-xs focus:outline-none focus:border-rose-500"
-                    />
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setOrderType('pickup')}
+                    className={`p-3 rounded-2xl border text-center transition flex items-center justify-center gap-2 ${
+                      orderType === 'pickup'
+                        ? 'border-purple-500 bg-purple-500/15 text-white shadow-lg'
+                        : 'border-slate-800 bg-slate-950/60 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <span className="text-base">🛍️</span>
+                    <div className="text-left">
+                      <div className="text-xs font-bold">Retirada no Balcão</div>
+                      <div className="text-[10px] text-emerald-400 font-semibold">Sem taxa de entrega</div>
+                    </div>
+                  </button>
                 </div>
               </div>
+
+              {/* DELIVERY ADDRESS / PICKUP INSTRUCTIONS */}
+              {orderType === 'delivery' ? (
+                <div className="space-y-3 pt-2 border-t border-slate-800/80">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-rose-400" />
+                      <span>Endereço para Entrega</span>
+                    </h4>
+
+                    {/* OPTIONAL GEOLOCATION BUTTON */}
+                    <button
+                      type="button"
+                      onClick={handleGetLocation}
+                      disabled={isLocating}
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 border border-rose-500/30 text-[11px] font-bold transition disabled:opacity-50"
+                    >
+                      {isLocating ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-400" />
+                          <span>Buscando GPS...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Navigation className="w-3.5 h-3.5" />
+                          <span>📍 Usar minha localização atual</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {locationStatus && (
+                    <div
+                      className={`p-2.5 rounded-xl text-xs flex items-center gap-2 ${
+                        locationStatus.type === 'success'
+                          ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-300'
+                          : 'bg-amber-500/15 border border-amber-500/30 text-amber-300'
+                      }`}
+                    >
+                      {locationStatus.type === 'success' ? (
+                        <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+                      ) : (
+                        <AlertCircle className="w-4 h-4 shrink-0 text-amber-400" />
+                      )}
+                      <span>{locationStatus.message}</span>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="col-span-2">
+                      <label className="block text-xs font-medium text-slate-300 mb-1">Rua / Avenida *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ex: Av. Brasil"
+                        value={addressRua}
+                        onChange={e => setAddressRua(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-600 text-xs focus:outline-none focus:border-rose-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-slate-300 mb-1">Número *</label>
+                      <input
+                        ref={numeroInputRef}
+                        type="text"
+                        required
+                        placeholder="Ex: 1500"
+                        value={addressNumero}
+                        onChange={e => setAddressNumero(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-600 text-xs focus:outline-none focus:border-rose-500 font-semibold"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-300 mb-1">Bairro *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ex: Centro"
+                        value={addressBairro}
+                        onChange={e => setAddressBairro(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-600 text-xs focus:outline-none focus:border-rose-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-slate-300 mb-1">Complemento / Apto</label>
+                      <input
+                        type="text"
+                        placeholder="Ex: Apto 32 Bloco B"
+                        value={addressComplemento}
+                        onChange={e => setAddressComplemento(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-600 text-xs focus:outline-none focus:border-rose-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 rounded-2xl bg-purple-950/40 border border-purple-500/30 text-xs space-y-2">
+                  <div className="flex items-center gap-2 text-purple-300 font-bold">
+                    <span className="text-base">🛍️</span>
+                    <span>Retirada Direta no Balcão do Estabelecimento</span>
+                  </div>
+                  <p className="text-slate-300 leading-relaxed">
+                    Você escolheu buscar seu pedido diretamente na loja. Assim que o restaurante confirmar e preparar seu pedido, você receberá a notificação para retirada!
+                  </p>
+                  <div className="text-[11px] text-emerald-400 font-semibold pt-1">
+                    ✓ Isento de taxa de entrega (Economia de R$ 5,00)
+                  </div>
+                </div>
+              )}
 
               {/* PAYMENT METHOD */}
               <div className="space-y-3 pt-2 border-t border-slate-800/80">

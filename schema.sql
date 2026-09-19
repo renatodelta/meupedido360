@@ -260,3 +260,10 @@ CREATE POLICY order_items_staff_all ON public.order_items
 
 -- Habilita o canal Realtime para a tabela orders para atualizações em tempo real no painel do restaurante
 ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;
+
+-- 7. TABELA DE CONFIGURAÇÕES GLOBAIS DA PLATAFORMA (Ex: Trava de Vendas / Em Breve)
+CREATE TABLE IF NOT EXISTS public.platform_settings (
+    key TEXT PRIMARY KEY,
+    value JSONB NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT now() NOT NULL
+);

@@ -8,7 +8,17 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 // Global in-memory cache for sales status
 let cachedSalesEnabled: boolean = true;
 let lastFetchTime: number = 0;
-const CACHE_TTL_MS = 5000; // 5 seconds cache
+const CACHE_TTL_MS = 3000; // 3 seconds cache
+
+function parseBooleanValue(val: any): boolean {
+  if (val === true || val === 'true' || val === 1 || val === '1') return true;
+  if (val === false || val === 'false' || val === 0 || val === '0') return false;
+  if (typeof val === 'object' && val !== null) {
+    if (val.sales_enabled !== undefined) return parseBooleanValue(val.sales_enabled);
+    if (val.value !== undefined) return parseBooleanValue(val.value);
+  }
+  return false;
+}
 
 async function getSalesStatus(): Promise<boolean> {
   const now = Date.now();
@@ -24,7 +34,7 @@ async function getSalesStatus(): Promise<boolean> {
       .maybeSingle();
 
     if (!error && data && data.value !== undefined) {
-      cachedSalesEnabled = Boolean(data.value);
+      cachedSalesEnabled = parseBooleanValue(data.value);
     }
   } catch (err) {
     // Keep in-memory cached value if table doesn't exist yet

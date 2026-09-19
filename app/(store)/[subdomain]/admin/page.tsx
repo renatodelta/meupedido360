@@ -47,6 +47,7 @@ interface Order {
   customer_name: string;
   customer_phone: string;
   delivery_address_json: {
+    tipo?: string;
     rua?: string;
     numero?: string;
     bairro?: string;
@@ -698,18 +699,34 @@ export default function AdminDashboardKDS() {
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
 
-            {/* Customer Delivery Address */}
+            {/* Customer Delivery Address / Pickup Instructions */}
             <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800 space-y-1 text-xs">
-              <div className="font-semibold text-slate-400 flex items-center gap-1.5 mb-1">
-                <MapPin className="w-4 h-4 text-rose-400" />
-                <span>Endereço de Entrega</span>
-              </div>
-              <p className="text-white font-medium">
-                {selectedOrder.delivery_address_json?.rua || 'Rua Principal'}, nº {selectedOrder.delivery_address_json?.numero || 'S/N'}
-              </p>
-              <p className="text-slate-400">
-                {selectedOrder.delivery_address_json?.bairro || 'Bairro'} - {selectedOrder.delivery_address_json?.cidade || 'Cidade'}
-              </p>
+              {selectedOrder.delivery_address_json?.tipo === 'retirada' || Number(selectedOrder.delivery_fee) === 0 ? (
+                <div className="space-y-1.5">
+                  <div className="font-extrabold text-purple-400 flex items-center gap-1.5 text-xs uppercase tracking-wider">
+                    <span>🛍️ RETIRADA NO BALCÃO</span>
+                  </div>
+                  <p className="text-white font-bold">
+                    O cliente irá retirar o pedido diretamente no balcão da loja.
+                  </p>
+                  <p className="text-emerald-400 font-semibold text-[11px]">
+                    ✓ Isento de taxa de entrega
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="font-semibold text-slate-400 flex items-center gap-1.5 mb-1">
+                    <MapPin className="w-4 h-4 text-rose-400" />
+                    <span>Endereço de Entrega</span>
+                  </div>
+                  <p className="text-white font-medium">
+                    {selectedOrder.delivery_address_json?.rua || 'Rua Principal'}, nº {selectedOrder.delivery_address_json?.numero || 'S/N'}
+                  </p>
+                  <p className="text-slate-400">
+                    {selectedOrder.delivery_address_json?.bairro || 'Bairro'} - {selectedOrder.delivery_address_json?.cidade || 'Cidade'}
+                  </p>
+                </>
+              )}
             </div>
 
             {/* Items List */}
@@ -737,7 +754,7 @@ export default function AdminDashboardKDS() {
               </div>
               <div className="flex justify-between text-slate-400">
                 <span>Taxa de Entrega</span>
-                <span>{formatCurrency(selectedOrder.delivery_fee)}</span>
+                <span>{selectedOrder.delivery_address_json?.tipo === 'retirada' || Number(selectedOrder.delivery_fee) === 0 ? 'Grátis (Retirada)' : formatCurrency(selectedOrder.delivery_fee)}</span>
               </div>
               <div className="flex justify-between text-sm font-extrabold text-white pt-1">
                 <span>Total</span>
@@ -746,48 +763,54 @@ export default function AdminDashboardKDS() {
             </div>
 
             {/* DRIVER ASSIGNMENT & WHATSAPP DISPATCH */}
-            <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800 space-y-3 text-xs">
-              <div className="font-semibold text-slate-400 flex items-center justify-between">
-                <span>🛵 Entregador / Motoboy Responsável</span>
-                {drivers.length === 0 && (
-                  <a href={`/${subdomain}/admin/drivers`} className="text-rose-400 font-bold hover:underline">
-                    + Cadastrar Motoboy
-                  </a>
-                )}
+            {selectedOrder.delivery_address_json?.tipo === 'retirada' || Number(selectedOrder.delivery_fee) === 0 ? (
+              <div className="bg-purple-950/30 p-3.5 rounded-2xl border border-purple-500/30 text-xs text-purple-200 font-medium flex items-center justify-between">
+                <span>🛍️ Pedido marcado para Retirada no Balcão (Não necessita de entregador).</span>
               </div>
-
-              {drivers.length > 0 ? (
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <select
-                    value={selectedOrder.driver_id || ''}
-                    onChange={(e) => updateOrderStatus(selectedOrder.id, selectedOrder.status, e.target.value)}
-                    className="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white focus:outline-none focus:border-rose-500 font-medium"
-                  >
-                    <option value="">Selecione o Entregador...</option>
-                    {drivers.map(d => (
-                      <option key={d.id} value={d.id}>
-                        {d.name} ({formatPhone(d.phone)}) - {d.status === 'available' ? 'Disponível' : 'Em Rota'}
-                      </option>
-                    ))}
-                  </select>
-
-                  {selectedOrder.driver_id && (
-                    <button
-                      onClick={() => {
-                        const drv = drivers.find(d => d.id === selectedOrder.driver_id);
-                        if (drv) dispatchToMotoboy(selectedOrder, drv);
-                      }}
-                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold flex items-center justify-center gap-1.5 transition shadow-sm"
-                    >
-                      <Phone className="w-3.5 h-3.5" />
-                      <span>Despachar no WhatsApp</span>
-                    </button>
+            ) : (
+              <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800 space-y-3 text-xs">
+                <div className="font-semibold text-slate-400 flex items-center justify-between">
+                  <span>🛵 Entregador / Motoboy Responsável</span>
+                  {drivers.length === 0 && (
+                    <a href={`/${subdomain}/admin/drivers`} className="text-rose-400 font-bold hover:underline">
+                      + Cadastrar Motoboy
+                    </a>
                   )}
                 </div>
-              ) : (
-                <p className="text-slate-500">Nenhum motoboy cadastrado nesta loja.</p>
-              )}
-            </div>
+
+                {drivers.length > 0 ? (
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <select
+                      value={selectedOrder.driver_id || ''}
+                      onChange={(e) => updateOrderStatus(selectedOrder.id, selectedOrder.status, e.target.value)}
+                      className="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white focus:outline-none focus:border-rose-500 font-medium"
+                    >
+                      <option value="">Selecione o Entregador...</option>
+                      {drivers.map(d => (
+                        <option key={d.id} value={d.id}>
+                          {d.name} ({formatPhone(d.phone)}) - {d.status === 'available' ? 'Disponível' : 'Em Rota'}
+                        </option>
+                      ))}
+                    </select>
+
+                    {selectedOrder.driver_id && (
+                      <button
+                        onClick={() => {
+                          const drv = drivers.find(d => d.id === selectedOrder.driver_id);
+                          if (drv) dispatchToMotoboy(selectedOrder, drv);
+                        }}
+                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold flex items-center justify-center gap-1.5 transition shadow-sm"
+                      >
+                        <Phone className="w-3.5 h-3.5" />
+                        <span>Despachar no WhatsApp</span>
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-slate-500">Nenhum motoboy cadastrado nesta loja.</p>
+                )}
+              </div>
+            )}
 
             {/* Order Status Advancement Control */}
             <div className="pt-3 flex gap-2">

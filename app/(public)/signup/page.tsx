@@ -48,6 +48,9 @@ function SignupFormContent() {
       .then(data => {
         if (typeof data.sales_enabled === 'boolean') {
           setSalesEnabled(data.sales_enabled);
+          if (!data.sales_enabled) {
+            setPlan('trial');
+          }
         }
       })
       .catch(() => {});
@@ -56,10 +59,12 @@ function SignupFormContent() {
   // Sync plan if query param changes
   useEffect(() => {
     const qPlan = searchParams.get('plan');
-    if (qPlan === 'pro' || qPlan === 'trial') {
+    if (qPlan === 'pro' && !salesEnabled) {
+      setPlan('trial');
+    } else if (qPlan === 'pro' || qPlan === 'trial') {
       setPlan(qPlan);
     }
-  }, [searchParams]);
+  }, [searchParams, salesEnabled]);
 
   // Auto-generate slug suggestion from store name if slug hasn't been manually typed
   const handleStoreNameChange = (val: string) => {
@@ -176,6 +181,18 @@ function SignupFormContent() {
           Tenha seu subdomínio exclusivo, receba pedidos em tempo real no KDS e despache entregadores sem taxas sobre suas vendas.
         </p>
       </div>
+
+      {!salesEnabled && (
+        <div className="max-w-4xl mx-auto mb-6 p-4 rounded-2xl bg-amber-500/15 border border-amber-500/40 text-amber-200 text-xs flex items-center gap-3 shadow-xl backdrop-blur-md">
+          <Lock className="w-6 h-6 text-amber-400 shrink-0" />
+          <div className="space-y-0.5">
+            <strong className="text-amber-300 block text-sm font-extrabold">🔒 Vendas do Plano Pro Temporariamente Trancadas</strong>
+            <p className="text-slate-300 leading-relaxed">
+              As contratações diretas estão em modo "Em Breve". Sua conta será criada gratuitamente no <strong>Plano Teste Grátis de 7 dias com acesso completo</strong> sem necessidade de cartão de crédito.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
